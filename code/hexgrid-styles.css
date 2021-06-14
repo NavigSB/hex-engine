@@ -1,0 +1,37 @@
+@media screen and (min-width: 992px) {
+  #screen-container {
+    width: 50%;
+  }
+}
+
+@media screen and (max-width: 991px) {
+  #screen-container {
+    width: 95%;
+  }
+}
+
+.hidden {
+  display: none;
+}
+
+#screen {
+  width: 100%;
+}
+
+#hex-tooltip {
+  position: absolute;
+  z-index: 2;
+}
+
+svg text, #hex-tooltip {
+  cursor: default;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  pointer-events: none;
+}
+
+svg text::selection, #hex-tooltip::selection {
+  background: none;
+}

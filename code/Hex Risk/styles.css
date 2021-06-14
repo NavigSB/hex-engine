@@ -1,0 +1,192 @@
+body {
+  margin: auto;
+  text-align: center;
+  width: 95%;
+  font-family: "Open Sans", sans-serif;
+}
+
+/* Extra small devices (phones, 600px and down) */
+@media only screen and (max-width: 600px) {
+  h1 {
+    font-size: 4em;
+  }
+}
+
+/* Small devices (portrait tablets and large phones, 600px and up) */
+@media only screen and (min-width: 600px) {
+  h1 {
+    font-size: 4em;
+  }
+}
+
+/* Medium devices (landscape tablets, 768px and up) */
+@media only screen and (min-width: 768px) {
+  h1 {
+    font-size: 3em;
+  }
+}
+
+/* Large devices (laptops/desktops, 992px and up) */
+@media only screen and (min-width: 992px) {
+  h1 {
+    font-size: 3em;
+  }
+}
+
+/* Extra large devices (large laptops and desktops, 1200px and up) */
+@media only screen and (min-width: 1200px) {
+  h1 {
+    font-size: 3em;
+  }
+}
+
+#screen-container {
+  border-style: solid;
+  border-width: 3px;
+  border-radius: 10px;
+  padding: 2%;
+  margin: auto;
+  margin-top: 50px;
+  background-color: rgb(145, 190, 229);
+}
+
+#hex-tooltip {
+  background-color: rgba(46, 46, 46, 0.75);
+  color: white;
+  border-radius: 5px;
+  width: 100px;
+  padding: 5px;
+}
+
+#submit-btn {
+  display: block;
+  margin: auto;
+  margin-top: 20px;
+}
+
+#done-btn {
+  font-size: 1.5em;
+  margin-bottom: 5vh;
+}
+
+.options-card {
+  border-style: solid;
+  border-width: 2px;
+  border-radius: 10px;
+  margin: 5vh;
+  padding: 20px;
+  background-color: rgb(216, 216, 216);
+  font-size: 1.5em;
+}
+
+.option-title {
+  margin: 5px;
+}
+
+.option-input {
+  margin: 10px;
+}
+
+.hex {
+  fill: rgb(156, 156, 156);
+  fill-opacity: 50%;
+  stroke: black;
+  cursor: crosshair;
+}
+
+.hex-land {
+  fill: rgb(140, 199, 160);
+}
+
+.hex-land:hover {
+  fill:rgb(90, 133, 104);
+}
+
+.hex-ocean {
+  opacity: 0;
+}
+
+.hex-neutral {
+  fill: rgb(219, 216, 152);
+}
+
+.hex-neutral:hover {
+  fill: rgb(169, 167, 105);
+}
+
+.region1 {
+  fill: rgb(185, 61, 66);
+}
+
+.region1:hover {
+  fill: rgb(105, 26, 29);
+}
+
+.region2 {
+  fill:rgb(126, 96, 153);
+}
+
+.region2:hover {
+  fill:rgb(89, 45, 128);
+}
+
+.region3 {
+  fill:rgb(118, 58, 57);
+}
+
+.region3:hover {
+  fill:rgb(93, 36, 37);
+}
+
+.region4 {
+  fill:rgb(205, 166, 84);
+}
+
+.region4:hover {
+  fill:rgb(159, 124, 43);
+}
+
+.region5 {
+  fill:rgb(71, 94, 153);
+}
+
+.region5:hover {
+  fill:rgb(45, 70, 126);
+}
+
+.region6 {
+  fill:rgb(114, 150, 83);
+}
+
+.region6:hover {
+  fill:rgb(79, 115, 50);
+}
+
+.hex-hover {
+  fill: transparent;
+  stroke: black;
+  cursor: crosshair;
+}
+
+.hex-hover:hover {
+  fill: #D3D3D3;
+  fill-opacity: 50%;
+}
+
+.unit {
+  pointer-events: none;
+}
+
+.arrow {
+  stroke: black;
+  fill: black;
+}
+
+.box {
+  stroke: black;
+  fill: transparent;
+}
+
+.clipped {
+  clip-path: url(#hex-clip);
+}

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+  <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <title>Hex Grid Builder</title>
+      <link rel="stylesheet" href="styles.css">
+      <script src="hexgrid.js"></script>
+      <script src="MCTS.js"></script>
+      <script src="hex-risk.js"></script>
+      <script src="hex-risk-index.js"></script>
+      <link rel="preconnect" href="https://fonts.gstatic.com">
+      <link href="https://fonts.googleapis.com/css2?family=Open+Sans&display=swap" rel="stylesheet">
+    </head>
+    <body>
+      <h1>Welcome to the Hex Grid Builder!</h1>
+      <p>
+        This site was built as a starting point for a new virtual board game currently in
+        development. The game will have a board with a hexagonal grid with a fixed number of rows
+        and columns. The challenge then was to create a responsive board that will work on any
+        sized screen so that mobile devices could participate with little more difficulty than any
+        other.
+      </p>
+      <p>
+        This tool aims at making this idea a reality, so it features a "screen" that responds
+        appropriately to any window size. Feel free to let me know of any improvements that would
+        make this more convenient!
+      </p>
+      <p>
+        All JS features used in the creation of this site not taught in CSE 154 thus far, which is
+        mostly just SVG features, were learned nearly exclusively from MDN, along with some
+        auxiliary Stack Overflow queries upon error messages.
+      </p>
+      <div id="screen-container">
+        <svg id="screen"></svg>
+      </div>
+    </body>
+  </html>
