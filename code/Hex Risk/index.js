@@ -2,7 +2,7 @@ window.addEventListener("load", test);
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 
-const BOARD_SIZE = 10;
+const BOARD_SIZE = 8;
 const COLOR_MODIFIER = 1.5;
 const VIEWS = ["loading-view", "init-view", "player-options-view", "screen-container"];
 

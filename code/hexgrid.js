@@ -186,6 +186,8 @@ var HexGrid = (function() {
 	class Hex {
 
 		constructor(tileX, tileY) {
+			this.tileX = tileX;
+			this.tileY = tileY;
 			let cubeCoords = tileToCubeCoords(tileX, tileY);
 			this.x = cubeCoords[0];
 			this.y = cubeCoords[1];
@@ -206,6 +208,14 @@ var HexGrid = (function() {
 			});
 		}
 
+		getTileCoords() {
+			return [this.tileX, this.tileY];
+		}
+
+		getCubeCoords() {
+			return [this.x, this.y, this.z];
+		}
+
 		addUnit(unit) {
 			this.units.push(unit);
 			updateScreen();
@@ -221,9 +231,7 @@ var HexGrid = (function() {
 			for(let i = 0; i < DIRS.length; i++) {
 				try {
 					neighbors.push(getHexFromCoords(this.x + DIRS[i][0], this.y + DIRS[i][1], this.z + DIRS[i][2]));
-				} catch(e) {
-
-				}
+				} catch(e) {}
 			}
 			return neighbors;
 		}

@@ -10,17 +10,17 @@ const MAX_REGION_VARIETY = 0.25;
 class HexRisk {
 
 	constructor(boardWidth, boardHeight) {
-		this.terrain = createTerrain(boardWidth, boardHeight);
-		displayTerrain(this.terrain);
+		let terrain = createTerrain(boardWidth, boardHeight);
 		this.landTiles = [];
-		for(let i = 0; i < this.terrain.length; i++) {
-			for(let j = 0; j < this.terrain[i].length; j++) {
-				if(this.terrain[i][j] === 1) {
+		for(let i = 0; i < terrain.length; i++) {
+			for(let j = 0; j < terrain[i].length; j++) {
+				if(terrain[i][j] === 1) {
 					this.landTiles.push([i, j]);
 				}
 			}
 		}
-		this.regions = createRegions(this.terrain, this.landTiles);
+		this.regionsInfo = createRegions(terrain, this.landTiles);
+		displayMap(this.regionsInfo);
 	}
 
 	getState() {
@@ -52,10 +52,30 @@ class HexRisk {
 	}
 }
 
+function displayMap(regionsInfo) {
+	let map = regionsInfo.map;
+	for(let i = 0; i < map.length; i++) {
+		for(let j = 0; j < map[i].length; j++) {
+			let hex = HexGrid.getHexFromTile(i, j)
+			if(map[i][j] === 0) {
+				hex.path.classList.add("hex-ocean");
+			}else{
+				hex.path.classList.add("hex-land");
+				hex.path.classList.add("region" + regionsInfo.stats[map[i][j]].styleId);
+			}
+		}
+	}
+}
+
 function createRegions(terrain, landTiles) {
 	const MAX_REGION_ATTEMPTS = 20;
 	let terrainLeft = JSON.parse(JSON.stringify(terrain));
-	let regions = JSON.parse(JSON.stringify(terrain));
+	let regionsMap = JSON.parse(JSON.stringify(terrain));
+	regionsMap.forEach((el, i) => {
+		el.forEach((el, j) => {
+			regionsMap[i][j] = el === 1 ? -1 : el;
+		});
+	});
 	let landTilesLeft = JSON.parse(JSON.stringify(landTiles));
 	for(let i = REGION_BONUSES.length - 1; i >= 0; i--) {
 		let tileCount = Math.round(REGION_BONUSES[i] * landTiles.length / SUM_BONUSES);
@@ -67,13 +87,12 @@ function createRegions(terrain, landTiles) {
 				let regionIds = floodGetRegion(startingTile, terrainLeft, tileCount);
 				if(regionIds.length >= tileCount * (1 - MAX_REGION_VARIETY)) {
 					for(let j = 0; j < regionIds.length; j++) {
-						document.getElementById(regionIds[j]).classList.add("region" + (i + 1));
 						let hexCoords = regionIds[j].split("_");
 						hexCoords.forEach((el, i) => {hexCoords[i] = parseInt(el)});
 						let tileCoords = HexGrid.getTileCoords(hexCoords[0], hexCoords[1], hexCoords[2]);
 						spliceCoordFrom2DArr(landTilesLeft, tileCoords[0], tileCoords[1]);
 						terrainLeft[tileCoords[0]][tileCoords[1]] = 0;
-						regions[tileCoords[0]][tileCoords[1]] = i + 1;
+						regionsMap[tileCoords[0]][tileCoords[1]] = i + 1;
 					}
 					break;
 				}
@@ -82,11 +101,59 @@ function createRegions(terrain, landTiles) {
 		}
 	}
 	for(let i = 0; i < landTilesLeft.length; i++) {
-		let id = HexGrid.getHexFromTile(landTilesLeft[i][0], landTilesLeft[i][1]).path.id;
-		document.getElementById(id).classList.add("hex-neutral");
-		regions[landTilesLeft[i][0]][landTilesLeft[i][1]] = -1;
+		let leftoverHex = HexGrid.getHexFromTile(landTilesLeft[i][0], landTilesLeft[i][1]);
+		let neighbors = leftoverHex.getNeighbors();
+		let newRegion, randomNeighbor;
+		for(let j = 0; j < neighbors.length; j++) {
+			let neighborRegion = regionsMap[neighbors[j].tileX][neighbors[j].tileY];
+			if(neighborRegion !== 0 && neighborRegion !== -1) {
+				newRegion = neighborRegion;
+				randomNeighbor = neighbors[j];
+				break;
+			}
+		}
+		if(randomNeighbor) {
+			regionsMap[landTilesLeft[i][0]][landTilesLeft[i][1]] = newRegion;
+		}else{
+			landTilesLeft.push(landTilesLeft[i]);
+		}
 	}
 
+	let regionsInfo = [];
+	let idCounter = 1;
+	for(let i = 0; i < regionsMap.length; i++) {
+		for(let j = 0; j < regionsMap[i].length; j++) {
+			if(regionsMap[i][j] !== 0) {
+				if(!regionsInfo[regionsMap[i][j]]) {
+					regionsInfo[regionsMap[i][j]] = {
+						id: idCounter,
+						styleId: regionsMap[i][j],
+						count: 0
+					};
+					idCounter++;
+				}
+				regionsInfo[regionsMap[i][j]].count++;
+				regionsMap[i][j] = regionsInfo[regionsMap[i][j]].id;
+			}
+		}
+	}
+
+	let stats = [];
+	for(let i = 1; i <= REGION_BONUSES.length; i++) {
+		if(regionsInfo[i] !== undefined) {
+			regionBonus = Math.round(SUM_BONUSES * regionsInfo[i].count / landTiles.length);
+			stats[regionsInfo[i].id] = {
+				styleId: regionsInfo[i].styleId,
+				count: regionsInfo[i].count,
+				bonus: regionBonus
+			};
+		}
+	}
+
+	let regions = {
+		stats: stats,
+		map: regionsMap
+	};
 	return regions;
 }
 
@@ -100,20 +167,6 @@ function spliceCoordFrom2DArr(array, x, y) {
 		}
 	}
 	return elementRemoved;
-}
-
-function displayTerrain(terrain) {
-	for(let i = 0; i < terrain.length; i++) {
-		for(let j = 0; j < terrain[i].length; j++) {
-			let newClass = "";
-			switch(terrain[i][j]) {
-				case -1: newClass = "hex-neutral"; break;
-				case 0: newClass = "hex-ocean"; break;
-				case 1: newClass = "hex-land"; break;
-			}
-			HexGrid.getHexFromTile(i, j).path.classList.add(newClass);
-		}
-	}
 }
 
 function createTerrain(w, h) {
