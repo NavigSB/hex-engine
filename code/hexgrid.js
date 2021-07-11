@@ -62,8 +62,22 @@ var HexGrid = (function() {
 		updateScreen();
 	}
 
+	API.moveUnitWithAttributes = async function(attributes) {
+		let unit = await API.selectUnitByAttributes(attributes);
+		let tile = await API.selectAnyHex();
+		unitMove(unit, tile);
+		updateScreen();
+	}
+
 	API.moveUnitInRange = async function(range) {
 		let unit = await API.selectAnyUnit();
+		let tile = await API.selectRangedHex(unit.hex, range);
+		unitMove(unit, tile);
+		updateScreen();
+	}
+
+	API.moveUnitInRangeWithAttributes = async function(attributes, range) {
+		let unit = await API.selectUnitByAttributes(attributes);
 		let tile = await API.selectRangedHex(unit.hex, range);
 		unitMove(unit, tile);
 		updateScreen();
@@ -102,6 +116,25 @@ var HexGrid = (function() {
 		return selected;
 	}
 
+	API.selectUnitByAttributes = async function(attributes) {
+		let unitsToSelect = [];
+		let attrKeys = Object.keys(attributes);
+		for(let i = 0; i < units.length; i++) {
+			let containsAllKeys = true;
+			for(key in attrKeys) {
+				if(units[i].attributes[key] !== attributes[key]) {
+					containsAllKeys = false;
+					break;
+				}
+			}
+			if(containsAllKeys) {
+				unitsToSelect.push(units[i]);
+			}
+		}
+		let selected = await selectUnits(unitsToSelect);
+		return selected;
+	}
+
 	API.addUnit = function(hex, imageSrc, attributesJSON) {
 		let newUnit = new Unit(hex, imageSrc, attributesJSON);
 		hex.units.push(newUnit);
@@ -110,11 +143,43 @@ var HexGrid = (function() {
 		return newUnit;
 	}
 
+	API.removeUnit = function(unit) {
+		let parentHex = unit.hex;
+		for(let i = 0; i < units.length; i++) {
+			if(units[i] === unit) {
+				units.splice(i, 1);
+				break;
+			}
+		}
+		for(let i = 0; i < parentHex.units.length; i++) {
+			if(parentHex.units[i] === unit) {
+				parentHex.removeUnit(i);
+				break;
+			}
+		}
+	}
+
 	API.addObstruction = function(hex, imageSrc, attributesJSON) {
 		let newObs = new Obstruction(hex, imageSrc, attributesJSON);
 		hex.obstructions.push(newObs);
 		obstructions.push(newObs);
 		return newObs;
+	}
+
+	API.removeObstruction = function(obstruction) {
+		let parentHex = obstruction.hex;
+		for(let i = 0; i < obstructions.length; i++) {
+			if(obstructions[i] === obstruction) {
+				obstructions.splice(i, 1);
+				break;
+			}
+		}
+		for(let i = 0; i < parentHex.obstructions.length; i++) {
+			if(parentHex.obstructions[i] === obstruction) {
+				parentHex.removeObstruction(i);
+				break;
+			}
+		}
 	}
 
 	API.drawArrow = function(startTile, endTile) {
@@ -243,6 +308,11 @@ var HexGrid = (function() {
 
 		addObstruction(obstruction) {
 			this.obstructions.push(obstruction);
+			updateScreen();
+		}
+
+		removeObstruction(index) {
+			this.obstructions.splice(index, 1);
 			updateScreen();
 		}
 
