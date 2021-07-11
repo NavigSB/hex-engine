@@ -1,8 +1,7 @@
-window.addEventListener("load", test);
+window.addEventListener("load", init);
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 
-const COLOR_MODIFIER = 1.5;
 const VIEWS = ["loading-view", "init-view", "screen-container"];
 
 const FACTION_ICONS = {"republic": "venator.png",
@@ -12,7 +11,6 @@ const FACTION_ICONS = {"republic": "venator.png",
 
 let playerCount;
 let players = [];
-let boardSize;
 
 function init() {
     id("submit-btn").addEventListener("click", function() {
@@ -35,37 +33,27 @@ function init() {
                 icon: FACTION_ICONS[aiFaction]
             }
         ];
+        switchViews("loading-view");
+        let map;
+        if(playerFaction === "republic" || playerFaction === "cis") {
+            map = new SpaceMap(SpaceMap.CLONE_WARS);
+        }else{
+            map = new SpaceMap(SpaceMap.GALACTIC_CIVIL_WAR);
+        }
+        buildGrid(map.boardWidth);
+        map.generate();
+        displaySpaceMap(map);
+        startGame(map);
     });
 }
 
-function test() {
-    init();
-    players = [
-        {
-            faction: "republic",
-            icon: FACTION_ICONS["republic"]
-        },
-        {
-            faction: "cis",
-            icon: FACTION_ICONS["cis"]
-        }
-    ];
-    switchViews("loading-view");
-    let map = new SpaceMap(SpaceMap.CLONE_WARS);
-    boardSize = map.boardWidth;
-    buildGrid();
-    map.generate();
-    displaySpaceMap(map.map);
-    let testGame = new HexStarWars(map);
-    for(let i = 0; i < players.length; i++) {
-        let hex = map.navigableTiles[Math.floor(Math.random() * map.navigableTiles.length)];
-        addFleetToTile(hex[0], hex[1], players[i]);
-    }
+function startGame(map) {
+    let game = new HexStarWars(map);
     switchViews("screen-container");
     HexGrid.update();
 }
 
-function buildGrid() {
+function buildGrid(boardSize) {
     HexGrid.setClasses({
         hexClass: "hex",
         hexHoverClass: "hex-hover",
@@ -79,13 +67,21 @@ function buildGrid() {
 }
 
 function displaySpaceMap(spaceMap) {
-    for(let i = 0; i < spaceMap.length; i++) {
-        for(let j = 0; j < spaceMap[i].length; j++) {
+    let navigatingMap = spaceMap.map;
+    for(let i = 0; i < navigatingMap.length; i++) {
+        for(let j = 0; j < navigatingMap[i].length; j++) {
             let hex = HexGrid.getHexFromTile(i, j)
-            if(spaceMap[i][j] === 0) {
-                hex.path.classList.add("hex-space");
-            }else{
+            if(navigatingMap[i][j].navigable) {
                 hex.path.classList.add("hex-planet");
+                let attr = {
+                    "System": navigatingMap[i][j].sectorName
+                };
+                if(navigatingMap[i][j].controlledBy !== null) {
+                    attr["Controlled By"] = navigatingMap[i][j].controlledBy;
+                }
+                hex.setAttributes(attr);
+            }else{
+                hex.path.classList.add("hex-space");
             }
         }
     }

@@ -1,7 +1,13 @@
 class HexStarWars {
 
 	constructor(spaceMap) {
-		this.spaceMap = spaceMap;
+		this.state = {
+			spaceMap,
+			playerTurn: 0,
+			gameOver: false,
+			winner: -1,
+			moves: 0
+		};
 	}
 
 	getState() {

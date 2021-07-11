@@ -1,21 +1,68 @@
 const MAP_PERC_SPACE = 30;
+const MAP_PERC_NO_PLANETS = 25;
 const MIN_PLANETS = 10;
 
-const COMMON_PLANETS = ["Coruscant", "Dagobah", "Felucia", "Jabba's Palace", "Kamino", "Kashyyyk",
-						"Tatooine", "Mustafar", "Mygeeto", "Naboo", "Polis Massa", "Utapau", "Yavin 4"];
-const CW_PLANETS = ["Geonosis"];
-const GCW_PLANETS = ["Endor", "Hoth"];
+const COMMON_PLANETS = [{
+    name: "Coruscant",
+    image: "coruscant."
+}, {
+    name: "Dagobah",
+    image: ""
+}, {
+    name: "Felucia",
+    image: ""
+}, {
+    name: "Kamino",
+    image: ""
+}, {
+    name: "Kashyyyk",
+    image: ""
+}, {
+    name: "Tatooine",
+    image: ""
+}, {
+    name: "Mustafar",
+    image: ""
+}, {
+    name: "Mygeeto",
+    image: ""
+}, {
+    name: "Naboo",
+    image: ""
+}, {
+    name: "Polis Massa",
+    image: ""
+}, {
+    name: "Utapau",
+    image: ""
+}, {
+    name: "Yavin 4",
+    image: ""
+}];
+const CW_PLANETS = [{
+    name: "Geonosis",
+    image: ""
+}];
+const GCW_PLANETS = [{
+    name: "Endor",
+    image: ""
+}, {
+    name: "Hoth",
+    image: ""
+}];
 
 class SpaceMap {
 
     //Map types are: SpaceMap.CLONE_WARS and SpaceMap.GALACTIC_CIVIL_WAR - See bottom of script
     constructor(mapType) {
         if(mapType) {
-			this.planets = COMMON_PLANETS.concat(CW_PLANETS);
+			this.possiblePlanets = COMMON_PLANETS.concat(CW_PLANETS);
 		}else{
-			this.planets = COMMON_PLANETS.concat(GCW_PLANETS);
+			this.possiblePlanets = COMMON_PLANETS.concat(GCW_PLANETS);
 		}
-        this.boardWidth = Math.floor(Math.sqrt(100 * this.planets.length / (100 - MAP_PERC_SPACE)));
+        this.minTiles = Math.floor(10000 * (MIN_PLANETS / (100 - MAP_PERC_NO_PLANETS) / (100 - MAP_PERC_SPACE)));
+        this.maxTiles = Math.round(10000 * (this.possiblePlanets.length / (100 - MAP_PERC_NO_PLANETS) / (100 - MAP_PERC_SPACE)));
+        this.boardWidth = Math.floor(Math.sqrt(this.maxTiles));
     }
 
     generate() {
@@ -24,12 +71,12 @@ class SpaceMap {
 			this.navigableTiles = [];
 			for(let i = 0; i < this.map.length; i++) {
 				for(let j = 0; j < this.map[i].length; j++) {
-					if(this.map[i][j] === 1) {
+					if(this.map[i][j].navigable) {
 						this.navigableTiles.push([i, j]);
 					}
 				}
 			}
-		} while(this.navigableTiles.length < MIN_PLANETS || this.navigableTiles.length > this.planets.length);
+		} while(this.navigableTiles.length < this.minTiles || this.navigableTiles.length > this.maxTiles);
     }
 
     createMap(w, h) {
@@ -63,6 +110,35 @@ class SpaceMap {
         }
 
         map = this.fixIsolations(map, navigableTiles);
+
+        let planetCount = navigableTiles.length * (100 - MAP_PERC_NO_PLANETS) / 100;
+        let totalRegions = [];
+        let planets = shuffle(this.possiblePlanets);
+        planets.splice(planetCount);
+        planets = planets.map(obj => obj.name);
+
+        totalRegions = JSON.parse(JSON.stringify(planets));
+        let sectorCount = navigableTiles.length - totalRegions.length;
+        for(let i = 0; i < sectorCount; i++) {
+            totalRegions.push("Sector " + (i + 1));
+        }
+        totalRegions = shuffle(totalRegions);
+
+        for(let i = 0; i < map.length; i++) {
+            for(let j = 0; j < map[i].length; j++) {
+                if(map[i][j] === 0) {
+                    map[i][j] = {
+                        navigable: false
+                    };
+                }else{
+                    map[i][j] = {
+                        controlledBy: null,
+                        sectorName: totalRegions.splice(0, 1)[0],
+                        navigable: true
+                    };
+                }
+            }
+        }
 
         return map;
     }
@@ -134,3 +210,22 @@ class SpaceMap {
 
 SpaceMap.CLONE_WARS = 0;
 SpaceMap.GALACTIC_CIVIL_WAR = 1;
+
+//Curtesy of: https://stackoverflow.com/questions/2450954/how-to-randomize-shuffle-a-javascript-array
+function shuffle(array) {
+    let currentIndex = array.length;
+    let randomIndex;
+
+    // While there remain elements to shuffle...
+    while (0 !== currentIndex) {
+
+      // Pick a remaining element...
+      randomIndex = Math.floor(Math.random() * currentIndex);
+      currentIndex--;
+
+      // And swap it with the current element.
+      [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+    }
+
+    return array;
+  }
