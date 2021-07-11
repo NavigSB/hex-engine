@@ -55,6 +55,17 @@ var HexGrid = (function() {
 		}
 	}
 
+	API.getHexesInRange = function(startingHex, range, includeCenter) {
+		let rangedHexes = [];
+		for(let i = 0; i < hexes.length; i++) {
+			let dist = hexDist(startingHex, hexes[i]);
+			if((dist <= range && dist > 0) || (dist === 0 && includeCenter)) {
+				rangedHexes.push(hexes[i]);
+			}
+		}
+		return rangedHexes;
+	}
+
 	API.moveUnit = async function() {
 		let unit = await API.selectAnyUnit();
 		let tile = await API.selectAnyHex();
@@ -100,14 +111,7 @@ var HexGrid = (function() {
 	}
 
 	API.selectRangedHex = async function(startingHex, range, includeCenter) {
-		let rangedHexes = [];
-		for(let i = 0; i < hexes.length; i++) {
-			let dist = hexDist(startingHex, hexes[i]);
-			if((dist <= range && dist > 0) || (dist === 0 && includeCenter)) {
-				rangedHexes.push(hexes[i]);
-			}
-		}
-		let selected = await selectHex(rangedHexes);
+		let selected = await selectHex(API.getHexesInRange(startingHex, range, includeCenter));
 		return selected;
 	}
 
@@ -262,15 +266,16 @@ var HexGrid = (function() {
 			this.path = document.createElementNS(SVG_NS, "path");
 			this.path.id = this.x + "_" + this.y + "_" + this.z;
 			this.attributes = {};
-			let thisHex = this;
-			this.path.addEventListener("mousemove", function(){
-				if(Object.keys(thisHex.attributes).length > 0) {
-					id("hex-tooltip").innerHTML = thisHex.getAttrStr();
-					id("hex-tooltip").classList.remove("hidden");
-				}else{
-					id("hex-tooltip").classList.add("hidden");
-				}
-			});
+			this.path.addEventListener("mousemove", () => this.mouseoverCallback(this));
+		}
+
+		mouseoverCallback(thisHex) {
+			if(Object.keys(thisHex.attributes).length > 0) {
+				id("hex-tooltip").innerHTML = thisHex.getAttrStr();
+				id("hex-tooltip").classList.remove("hidden");
+			}else{
+				id("hex-tooltip").classList.add("hidden");
+			}
 		}
 
 		getTileCoords() {
@@ -355,10 +360,7 @@ var HexGrid = (function() {
 				this.backgroundImage.setAttribute("y", pathBoundingBox.y);
 				this.backgroundImage.setAttribute("width", pathBoundingBox.width);
 				this.backgroundImage.setAttribute("height", pathBoundingBox.height);
-				let wrap = document.createElement("div");
-				wrap.appendChild(this.backgroundImage.cloneNode(true));
-				let content = wrap.innerHTML;
-				id("screen").innerHTML = content + id("screen").innerHTML;
+				id("screen").prepend(this.backgroundImage);
 				this.path = id("screen").getElementById(this.x + "_" + this.y + "_" + this.z);
 			}
 		}
@@ -614,6 +616,9 @@ var HexGrid = (function() {
 	function setTooltipToMouse(event) {
 		id("hex-tooltip").style.left = event.pageX + "px";
 		id("hex-tooltip").style.top = event.pageY + "px";
+		if(event.path[0] === id("screen") || event.path[0] === id("screen").parentElement) {
+			id("hex-tooltip").classList.add("hidden");
+		}
 	}
 
 	async function selectHex(hexes) {
