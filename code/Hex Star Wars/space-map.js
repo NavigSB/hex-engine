@@ -4,58 +4,58 @@ const MIN_PLANETS = 10;
 
 const COMMON_PLANETS = [{
     name: "Coruscant",
-    image: "coruscant."
+    image: "planets/coruscant.png"
 }, {
     name: "Dagobah",
-    image: ""
+    image: "planets/dagobah.png"
 }, {
     name: "Felucia",
-    image: ""
+    image: "planets/felucia.png"
 }, {
     name: "Kamino",
-    image: ""
+    image: "planets/kamino.png"
 }, {
     name: "Kashyyyk",
-    image: ""
+    image: "planets/kashyyyk.png"
 }, {
     name: "Tatooine",
-    image: ""
+    image: "planets/tatooine.png"
 }, {
     name: "Mustafar",
-    image: ""
+    image: "planets/mustafar.png"
 }, {
     name: "Mygeeto",
-    image: ""
+    image: "planets/mygeeto.png"
 }, {
     name: "Naboo",
-    image: ""
+    image: "planets/naboo.png"
 }, {
     name: "Polis Massa",
-    image: ""
+    image: "planets/polis-massa.png"
 }, {
     name: "Utapau",
-    image: ""
+    image: "planets/utapau.png"
 }, {
     name: "Yavin 4",
-    image: ""
+    image: "planets/yavin-4.png"
 }];
 const CW_PLANETS = [{
     name: "Geonosis",
-    image: ""
+    image: "planets/geonosis.png"
 }];
 const GCW_PLANETS = [{
     name: "Endor",
-    image: ""
+    image: "planets/endor.png"
 }, {
     name: "Hoth",
-    image: ""
+    image: "planets/hoth.png"
 }];
 
 class SpaceMap {
 
     //Map types are: SpaceMap.CLONE_WARS and SpaceMap.GALACTIC_CIVIL_WAR - See bottom of script
     constructor(mapType) {
-        if(mapType) {
+        if(mapType === SpaceMap.CLONE_WARS) {
 			this.possiblePlanets = COMMON_PLANETS.concat(CW_PLANETS);
 		}else{
 			this.possiblePlanets = COMMON_PLANETS.concat(GCW_PLANETS);
@@ -112,15 +112,13 @@ class SpaceMap {
         map = this.fixIsolations(map, navigableTiles);
 
         let planetCount = navigableTiles.length * (100 - MAP_PERC_NO_PLANETS) / 100;
-        let totalRegions = [];
-        let planets = shuffle(this.possiblePlanets);
-        planets.splice(planetCount);
-        planets = planets.map(obj => obj.name);
-
-        totalRegions = JSON.parse(JSON.stringify(planets));
+        let totalRegions = shuffle(JSON.parse(JSON.stringify(this.possiblePlanets)));
+        totalRegions.splice(planetCount);
         let sectorCount = navigableTiles.length - totalRegions.length;
         for(let i = 0; i < sectorCount; i++) {
-            totalRegions.push("Sector " + (i + 1));
+            totalRegions.push({
+                name: "Sector " + (i + 1)
+            });
         }
         totalRegions = shuffle(totalRegions);
 
@@ -133,9 +131,38 @@ class SpaceMap {
                 }else{
                     map[i][j] = {
                         controlledBy: null,
-                        sectorName: totalRegions.splice(0, 1)[0],
+                        sector: totalRegions.splice(0, 1)[0],
                         navigable: true
                     };
+                }
+            }
+        }
+
+        if(this.possiblePlanets.map(json => json.name).includes("Geonosis")) {
+            for(let i = 0; i < map.length; i++) {
+                for(let j = 0; j < map[i].length; j++) {
+                    if(map[i][j].navigable) {
+                        //Human team is always team 0
+                        if(map[i][j].sector.name === "Coruscant") {
+                            map[i][j].controlledBy = "The Republic";
+                        }
+                        if(map[i][j].sector.name === "Geonosis") {
+                            map[i][j].controlledBy = "The Confederacy";
+                        }
+                    }
+                }
+            }
+        }else{
+            for(let i = 0; i < map.length; i++) {
+                for(let j = 0; j < map[i].length; j++) {
+                    if(map[i][j].navigable) {
+                        if(map[i][j].sector.name === "Hoth") {
+                            map[i][j].controlledBy = "The Rebel Alliance";
+                        }
+                        if(map[i][j].sector.name === "Coruscant") {
+                            map[i][j].controlledBy = "The Empire";
+                        }
+                    }
                 }
             }
         }

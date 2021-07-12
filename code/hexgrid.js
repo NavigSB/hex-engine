@@ -335,7 +335,7 @@ var HexGrid = (function() {
 		getAttrStr() {
 			let attrStr = "";
 			for(let attribute in this.attributes) {
-				attrStr += attribute + ": " + this.attributes[attribute] + "<br>";
+				attrStr += "<strong>" + attribute + "</strong>: <br>" + this.attributes[attribute] + "<br>";
 			}
 			return attrStr.substring(0, attrStr.length - 4);
 		}
@@ -425,7 +425,7 @@ var HexGrid = (function() {
 				if(attribute === "showUnit") {
 					attrStr += this.getTooltipImageHTML();
 				}else{
-					attrStr += attribute + ": " + this.attributes[attribute];
+					attrStr += "<em>" + attribute + "</em>: " + this.attributes[attribute];
 				}
 				attrStr += "<br>";
 			}

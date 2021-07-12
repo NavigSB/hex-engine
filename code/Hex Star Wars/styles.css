@@ -134,3 +134,39 @@ body {
 .clipped {
   clip-path: url(#hex-clip);
 }
+
+.republic {
+  fill: red;
+  fill-opacity: 15%;
+}
+
+.republic:hover {
+  fill:rgb(255, 51, 0);
+}
+
+.cis {
+  fill: blue;
+  fill-opacity: 15%;
+}
+
+.cis:hover {
+  fill: rgb(0, 110, 255);
+}
+
+.rebellion {
+  fill: red;
+  fill-opacity: 15%;
+}
+
+.rebellion:hover {
+  fill:rgb(255, 51, 0);
+}
+
+.empire {
+  fill: rgb(0, 0, 0);
+  fill-opacity: 15%;
+}
+
+.empire {
+  fill: rgb(34, 30, 30);
+}

@@ -12,8 +12,8 @@ app.get("/common/:file", function(request, response) {
 	response.sendFile(path.join(__dirname + "/code/" + request.params.file));
 });
 
-app.get("/:file", function(request, response) {
-	response.sendFile(path.join(__dirname + "/code/Hex Star Wars/" + request.params.file));
+app.get("*", function(request, response) {
+	response.sendFile(path.join(__dirname + "/code/Hex Star Wars" + request.path));
 });
 
 const PORT = process.env.PORT || 8000;

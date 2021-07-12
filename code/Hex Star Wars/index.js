@@ -74,12 +74,24 @@ function displaySpaceMap(spaceMap) {
             if(navigatingMap[i][j].navigable) {
                 hex.path.classList.add("hex-planet");
                 let attr = {
-                    "System": navigatingMap[i][j].sectorName
+                    "System": navigatingMap[i][j].sector.name
                 };
                 if(navigatingMap[i][j].controlledBy !== null) {
                     attr["Controlled By"] = navigatingMap[i][j].controlledBy;
+                    let addRemove;
+                    switch(attr["Controlled By"]) {
+                        case "The Republic": addRemove = ["republic", "cis"]; break;
+                        case "The Confederacy": addRemove = ["cis", "republic"]; break;
+                        case "The Rebel Alliance": addRemove = ["rebellion", "empire"]; break;
+                        case "The Empire": addRemove = ["empire", "rebellion"]; break;
+                    }
+                    hex.path.classList.add(addRemove[0]);
+                    hex.path.classList.remove(addRemove[1]);
                 }
                 hex.setAttributes(attr);
+                if(!navigatingMap[i][j].sector.name.includes("Sector")) {
+                    hex.addBackgroundImage(navigatingMap[i][j].sector.image);
+                }
             }else{
                 hex.path.classList.add("hex-space");
             }
