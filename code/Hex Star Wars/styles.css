@@ -108,13 +108,14 @@ body {
 
 .hex-hover {
   fill: transparent;
-  stroke: black;
+  stroke: white;
   cursor: crosshair;
 }
 
 .hex-hover:hover {
   fill: #D3D3D3;
   fill-opacity: 50%;
+  cursor: pointer;
 }
 
 .unit {
@@ -169,4 +170,12 @@ body {
 
 .empire {
   fill: rgb(34, 30, 30);
+}
+
+.unit-hover {
+  cursor: pointer;
+}
+
+.unit-hover:hover {
+  opacity: 50%;
 }

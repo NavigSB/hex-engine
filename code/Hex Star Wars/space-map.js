@@ -124,17 +124,26 @@ class SpaceMap {
 
         for(let i = 0; i < map.length; i++) {
             for(let j = 0; j < map[i].length; j++) {
+                let neighbors = HexGrid.getHexFromTile(i, j).getNeighbors();
+                neighbors = neighbors.map(hex => [hex.tileX, hex.tileY]);
+                neighbors.filter(neighbor => {
+                    let x = neighbor[0];
+                    let y = neighbor[1];
+                    return map[x][y] === 1 || map[x][y].neighbors;
+                });
                 if(map[i][j] === 0) {
                     map[i][j] = {
                         navigable: false
                     };
                 }else{
                     map[i][j] = {
+                        navigable: true,
                         controlledBy: null,
                         sector: totalRegions.splice(0, 1)[0],
-                        navigable: true
+                        neighbors
                     };
                 }
+                map[i][j].neighbors = neighbors;
             }
         }
 
@@ -142,12 +151,13 @@ class SpaceMap {
             for(let i = 0; i < map.length; i++) {
                 for(let j = 0; j < map[i].length; j++) {
                     if(map[i][j].navigable) {
-                        //Human team is always team 0
                         if(map[i][j].sector.name === "Coruscant") {
                             map[i][j].controlledBy = "The Republic";
+                            map[i][j].capital = "The Republic";
                         }
                         if(map[i][j].sector.name === "Geonosis") {
                             map[i][j].controlledBy = "The Confederacy";
+                            map[i][j].capital = "The Confederacy";
                         }
                     }
                 }
@@ -158,9 +168,11 @@ class SpaceMap {
                     if(map[i][j].navigable) {
                         if(map[i][j].sector.name === "Hoth") {
                             map[i][j].controlledBy = "The Rebel Alliance";
+                            map[i][j].capital = "The Rebel Alliance";
                         }
                         if(map[i][j].sector.name === "Coruscant") {
                             map[i][j].controlledBy = "The Empire";
+                            map[i][j].capital = "The Empire";
                         }
                     }
                 }
