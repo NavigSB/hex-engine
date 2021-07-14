@@ -115,6 +115,11 @@ var HexGrid = (function() {
 		return selected;
 	}
 
+	API.customSelectHex = async function(hexes) {
+		let selected = await selectHex(hexes);
+		return selected;
+	}
+
 	API.selectAnyUnit = async function() {
 		let selected = await selectUnit(units);
 		return selected;
@@ -125,7 +130,7 @@ var HexGrid = (function() {
 		let attrKeys = Object.keys(attributes);
 		for(let i = 0; i < units.length; i++) {
 			let containsAllKeys = true;
-			for(key in attrKeys) {
+			for(let key in attrKeys) {
 				if(units[i].attributes[key] !== attributes[key]) {
 					containsAllKeys = false;
 					break;
@@ -135,7 +140,12 @@ var HexGrid = (function() {
 				unitsToSelect.push(units[i]);
 			}
 		}
-		let selected = await selectUnits(unitsToSelect);
+		let selected = await selectUnit(unitsToSelect);
+		return selected;
+	}
+
+	API.customSelectUnit = async function(units) {
+		let selected = await selectUnit(units);
 		return selected;
 	}
 
@@ -408,7 +418,7 @@ var HexGrid = (function() {
 			}
 			this.img.addEventListener("mouseenter", function(){
 				thisUnit.hex.shownUnit = thisUnit;
-				if(Object.keys(thisUnit.attributes).length > 0) {
+				if(Object.keys(thisUnit.attributes).length > 0 && thisUnit.attributes.showAttributes !== false) {
 					id("hex-tooltip").innerHTML = thisUnit.getAttrStr();
 					id("hex-tooltip").classList.remove("hidden");
 				}else{
