@@ -1,37 +1,40 @@
 <!DOCTYPE html>
-  <html lang="en">
-    <head>
-      <meta charset="UTF-8">
-      <title>Hex Star Wars</title>
-      <script src="common/hexgrid.js"></script>
-      <script src="common/MCTS.js"></script>
-      <link rel="stylesheet" href="common/hexgrid-styles.css">
-      <link rel="stylesheet" href="styles.css">
-      <script src="perlin.js"></script>
-      <script src="space-map.js"></script>
-      <script src="hex-star-wars.js"></script>
-      <script src="index.js"></script>
-      <link rel="preconnect" href="https://fonts.gstatic.com">
-      <link href="https://fonts.googleapis.com/css2?family=Open+Sans&display=swap" rel="stylesheet">
-    </head>
-    <body>
-      <section id="init-view">
-        <h1>Welcome to the Hex Star Wars!</h1>
-        <p>What faction do you want to play?</p>
-        <select id="faction-select">
-          <option value="republic">The Republic</option>
-          <option value="cis">The Confederacy</option>
-          <option value="rebellion">The Rebellion</option>
-          <option value="empire">The Empire</option>
-        </select>
-        <button id="submit-btn">Okay</button>
-      </section>
-      <section id="loading-view" class="hidden">
-        <h1>Loading...</h1>
-      </section>
-      <div id="ai-loading" class="hidden">Loading...</div>
-      <div id="screen-container" class="hidden">
-        <svg id="screen"></svg>
-      </div>
-    </body>
-  </html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Hex Star Wars</title>
+    <script src="common/hexgrid.js"></script>
+    <script src="common/MCTS.js"></script>
+    <link rel="stylesheet" href="common/hexgrid-styles.css" />
+    <link rel="stylesheet" href="styles.css" />
+    <script src="perlin.js"></script>
+    <script src="space-map.js"></script>
+    <script src="hex-star-wars.js"></script>
+    <script src="index.js"></script>
+    <link rel="preconnect" href="https://fonts.gstatic.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Open+Sans&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <section id="init-view">
+      <h1>Welcome to the Hex Star Wars!</h1>
+      <p>What faction do you want to play?</p>
+      <select id="faction-select">
+        <option value="republic">The Republic</option>
+        <option value="cis">The Confederacy</option>
+        <option value="rebellion">The Rebellion</option>
+        <option value="empire">The Empire</option>
+      </select>
+      <button id="submit-btn">Okay</button>
+    </section>
+    <section id="loading-view" class="hidden">
+      <h1>Loading...</h1>
+    </section>
+    <div id="ai-loading" class="hidden">Loading...</div>
+    <div id="screen-container" class="hidden">
+      <svg id="screen"></svg>
+    </div>
+  </body>
+</html>

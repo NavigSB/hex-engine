@@ -94,79 +94,81 @@ class HexStarWars {
       }
       moves = moves.concat(possibilities);
     }
-		if(currentPlayer.fleets.length === 0) {
-			for (let i = 0; i < this.state.spaceMap.map.length; i++) {
-				for (let j = 0; j < this.state.spaceMap.map[i].length; j++) {
-					if(this.state.spaceMap.map[i][j].controlledBy === this.state.playerTurn) {
-						moves.push(["build", i, j]);
-					}
-				}
-			}
-		}
+    if (currentPlayer.fleets.length === 0) {
+      for (let i = 0; i < this.state.spaceMap.map.length; i++) {
+        for (let j = 0; j < this.state.spaceMap.map[i].length; j++) {
+          if (
+            this.state.spaceMap.map[i][j].controlledBy === this.state.playerTurn
+          ) {
+            moves.push(["build", i, j]);
+          }
+        }
+      }
+    }
     return moves;
   }
 
   playMove(move, verbose, battleIsWon) {
-		if(move[0] === "build") {
-			this.state.players[this.state.playerTurn].fleets.push([move[1], move[2]]);
-		}else{
-			let fleetIndex = move[0];
-			let moveX = move[1];
-			let moveY = move[2];
-			let tileInQuestion = this.state.spaceMap.map[moveX][moveY];
-			let enemyFleets = this.state.players[this.state.lastPlayerTurn].fleets;
-			let isEnemyFleet = false;
-			for (let i = 0; i < enemyFleets.length; i++) {
-				if (enemyFleets[i][0] === moveX && enemyFleets[i][1] === moveY) {
-					isEnemyFleet = true;
-				}
-			}
+    if (move[0] === "build") {
+      this.state.players[this.state.playerTurn].fleets.push([move[1], move[2]]);
+    } else {
+      let fleetIndex = move[0];
+      let moveX = move[1];
+      let moveY = move[2];
+      let tileInQuestion = this.state.spaceMap.map[moveX][moveY];
+      let enemyFleets = this.state.players[this.state.lastPlayerTurn].fleets;
+      let isEnemyFleet = false;
+      for (let i = 0; i < enemyFleets.length; i++) {
+        if (enemyFleets[i][0] === moveX && enemyFleets[i][1] === moveY) {
+          isEnemyFleet = true;
+        }
+      }
 
-			let victory = true,
-				halfVictory = true;
-			if (battleIsWon === undefined) {
-				if (
-					!isEnemyFleet &&
-					tileInQuestion.controlledBy === this.state.lastPlayerTurn &&
-					!tileInQuestion.sector.name.includes("Sector")
-				) {
-					victory = this.simulateBattle(true, true);
-				} else if (isEnemyFleet) {
-					if (tileInQuestion.sector.name.includes("Sector")) {
-						victory = this.simulateBattle(false, true);
-					} else {
-						halfVictory = this.simulateBattle(false, true);
-						victory = halfVictory && this.simulateBattle(true, true);
-					}
-				}
-			} else {
-				victory = battleIsWon;
-			}
+      let victory = true,
+        halfVictory = true;
+      if (battleIsWon === undefined) {
+        if (
+          !isEnemyFleet &&
+          tileInQuestion.controlledBy === this.state.lastPlayerTurn &&
+          !tileInQuestion.sector.name.includes("Sector")
+        ) {
+          victory = this.simulateBattle(true, true);
+        } else if (isEnemyFleet) {
+          if (tileInQuestion.sector.name.includes("Sector")) {
+            victory = this.simulateBattle(false, true);
+          } else {
+            halfVictory = this.simulateBattle(false, true);
+            victory = halfVictory && this.simulateBattle(true, true);
+          }
+        }
+      } else {
+        victory = battleIsWon;
+      }
 
-			if (victory) {
-				this.state.spaceMap.map[moveX][moveY].controlledBy =
-					this.state.playerTurn;
-				this.state.players[this.state.playerTurn].fleets[fleetIndex] = [
-					moveX,
-					moveY,
-				];
-			} else {
-				this.state.players[this.state.playerTurn].fleets.splice(fleetIndex, 1);
-			}
-			if (victory || halfVictory) {
-				let enemyFleets = this.state.players[this.state.lastPlayerTurn].fleets;
-				for (let i = 0; i < enemyFleets.length; i++) {
-					if (enemyFleets[i][0] === moveX && enemyFleets[i][1] === moveY) {
-						this.state.players[this.state.lastPlayerTurn].fleets.splice(i, 1);
-						i--;
-					}
-				}
-			}
-		}
+      if (victory) {
+        this.state.spaceMap.map[moveX][moveY].controlledBy =
+          this.state.playerTurn;
+        this.state.players[this.state.playerTurn].fleets[fleetIndex] = [
+          moveX,
+          moveY,
+        ];
+      } else {
+        this.state.players[this.state.playerTurn].fleets.splice(fleetIndex, 1);
+      }
+      if (victory || halfVictory) {
+        let enemyFleets = this.state.players[this.state.lastPlayerTurn].fleets;
+        for (let i = 0; i < enemyFleets.length; i++) {
+          if (enemyFleets[i][0] === moveX && enemyFleets[i][1] === moveY) {
+            this.state.players[this.state.lastPlayerTurn].fleets.splice(i, 1);
+            i--;
+          }
+        }
+      }
+    }
 
     let map = this.state.spaceMap.map;
     let currentWinner = true,
-    lastWinner = true;
+      lastWinner = true;
     for (let i = 0; i < map.length; i++) {
       for (let j = 0; j < map[i].length; j++) {
         if (map[i][j].controlledBy === this.state.playerTurn) {

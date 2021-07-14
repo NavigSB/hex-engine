@@ -99,7 +99,7 @@ body {
 }
 
 .hex-planet:hover {
-  fill:rgb(90, 133, 104);
+  fill: rgb(90, 133, 104);
 }
 
 .hex-space {
@@ -113,7 +113,7 @@ body {
 }
 
 .hex-hover:hover {
-  fill: #D3D3D3;
+  fill: #d3d3d3;
   fill-opacity: 50%;
   cursor: pointer;
 }
@@ -142,7 +142,7 @@ body {
 }
 
 .republic:hover {
-  fill:rgb(255, 51, 0);
+  fill: rgb(255, 51, 0);
 }
 
 .cis {
@@ -160,7 +160,7 @@ body {
 }
 
 .rebellion:hover {
-  fill:rgb(255, 51, 0);
+  fill: rgb(255, 51, 0);
 }
 
 .empire {
