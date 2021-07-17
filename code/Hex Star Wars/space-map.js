@@ -172,6 +172,7 @@ class SpaceMap {
             controlledBy: null,
             sector: totalRegions.splice(0, 1)[0],
             neighbors,
+            fleets: [],
           };
         }
         map[i][j].neighbors = neighbors;

@@ -94,7 +94,6 @@ async function startGame(map, playerFaction) {
     displayGame(game);
 
     id("ai-loading").classList.remove("hidden");
-    console.log(new Date().getTime() - 1626149890192);
     let aiMove = await aiPlayer.selectMove();
     game.playMove(aiMove);
     displayGame(game);

@@ -15,7 +15,8 @@ class HexStarWars {
         secondPlayer = "The Rebellion";
         break;
       default:
-        "";
+        secondPlayer = "";
+        break;
     }
 
     let players = {};
@@ -31,6 +32,7 @@ class HexStarWars {
         if (spaceMap.map[i][j].capital !== undefined) {
           let player = spaceMap.map[i][j].capital;
           players[player].fleets.push([i, j]);
+          spaceMap.map[i][j].fleets.push([player, 0]);
         }
       }
     }
@@ -76,14 +78,12 @@ class HexStarWars {
       let possibilities = [];
       for (let j = 0; j < neighbors.length; j++) {
         let noFriendliesInHex = true;
-        for (let k = 0; k < currentPlayer.fleets.length; k++) {
-          let otherFleet = currentPlayer.fleets[k];
-          if (
-            neighbors[j][0] === otherFleet[0] &&
-            neighbors[j][1] === otherFleet[1]
-          ) {
-            noFriendliesInHex = false;
-          }
+        let neighborTile =
+          this.state.spaceMap.map[neighbors[j][0]][neighbors[j][1]];
+        if (neighborTile.navigable) {
+          noFriendliesInHex = !neighborTile.fleets
+            .map((fleet) => (fleet.length > 0 ? fleet[0] : []))
+            .includes(currentFaction);
         }
         if (
           noFriendliesInHex &&
@@ -108,9 +108,9 @@ class HexStarWars {
     return moves;
   }
 
-  playMove(move, verbose, battleIsWon) {
+  playMove(move, verbose, results) {
     if (move[0] === "build") {
-      this.state.players[this.state.playerTurn].fleets.push([move[1], move[2]]);
+      this.addFleet(this.state.playerTurn, move[1], move[2]);
     } else {
       let fleetIndex = move[0];
       let moveX = move[1];
@@ -126,7 +126,7 @@ class HexStarWars {
 
       let victory = true,
         halfVictory = true;
-      if (battleIsWon === undefined) {
+      if (results === undefined) {
         if (
           !isEnemyFleet &&
           tileInQuestion.controlledBy === this.state.lastPlayerTurn &&
@@ -142,27 +142,23 @@ class HexStarWars {
           }
         }
       } else {
-        victory = battleIsWon;
+        if (results.length === 2) {
+          halfVictory = results[0];
+          victory = results[0] && results[1];
+        } else {
+          victory = results[0];
+        }
       }
 
       if (victory) {
         this.state.spaceMap.map[moveX][moveY].controlledBy =
           this.state.playerTurn;
-        this.state.players[this.state.playerTurn].fleets[fleetIndex] = [
-          moveX,
-          moveY,
-        ];
+        this.moveFleet(this.state.playerTurn, fleetIndex, moveX, moveY);
       } else {
-        this.state.players[this.state.playerTurn].fleets.splice(fleetIndex, 1);
+        this.removeFleet(this.state.playerTurn, fleetIndex);
       }
       if (victory || halfVictory) {
-        let enemyFleets = this.state.players[this.state.lastPlayerTurn].fleets;
-        for (let i = 0; i < enemyFleets.length; i++) {
-          if (enemyFleets[i][0] === moveX && enemyFleets[i][1] === moveY) {
-            this.state.players[this.state.lastPlayerTurn].fleets.splice(i, 1);
-            i--;
-          }
-        }
+        this.removeFleetsFromPos(this.state.lastPlayerTurn, moveX, moveY);
       }
     }
 
@@ -192,6 +188,39 @@ class HexStarWars {
     let currentPlayer = this.state.playerTurn;
     this.state.playerTurn = this.state.lastPlayerTurn;
     this.state.lastPlayerTurn = currentPlayer;
+  }
+
+  addFleet(player, x, y) {
+    this.state.players[player].fleets.push([x, y]);
+    let tileFleets = this.state.spaceMap.map[x][y].fleets;
+    tileFleets.push([player, tileFleets.length]);
+  }
+
+  moveFleet(player, fleetIndex, newX, newY) {
+    this.removeFleet(player, fleetIndex);
+    this.addFleet(player, newX, newY);
+  }
+
+  removeFleet(player, index) {
+    let removed = this.state.players[player].fleets.splice(index, 1)[0];
+    let tileFleets = this.state.spaceMap.map[removed[0]][removed[1]].fleets;
+    for (let i = 0; i < tileFleets.length; i++) {
+      if (tileFleets[i][0] === player) {
+        tileFleets.splice(i, 1);
+        break;
+      }
+    }
+  }
+
+  removeFleetsFromPos(player, x, y) {
+    let tileFleets = this.state.spaceMap.map[x][y].fleets;
+    for (let i = 0; i < tileFleets.length; i++) {
+      if (tileFleets[i][0] === player) {
+        let removed = tileFleets.splice(i, 1)[0];
+        this.state.players[player].fleets.splice(removed[1], 1);
+        i--;
+      }
+    }
   }
 
   //Returns whether or not the current player wins
