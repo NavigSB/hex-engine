@@ -77,19 +77,37 @@ class HexStarWars {
       let neighbors = this.state.spaceMap.map[fleet[0]][fleet[1]].neighbors;
       let possibilities = [];
       for (let j = 0; j < neighbors.length; j++) {
-        let noFriendliesInHex = true;
+        let friendliesInHex = false,
+          enemiesInHex = false;
         let neighborTile =
           this.state.spaceMap.map[neighbors[j][0]][neighbors[j][1]];
         if (neighborTile.navigable) {
-          noFriendliesInHex = !neighborTile.fleets
-            .map((fleet) => (fleet.length > 0 ? fleet[0] : []))
-            .includes(currentFaction);
+          let factionsInHex = neighborTile.fleets.map((fleet) =>
+            fleet.length > 0 ? fleet[0] : []
+          );
+          friendliesInHex = factionsInHex.includes(currentFaction);
+          enemiesInHex = factionsInHex.includes(this.state.lastPlayerTurn);
         }
         if (
-          noFriendliesInHex &&
+          !friendliesInHex &&
           this.state.spaceMap.map[neighbors[j][0]][neighbors[j][1]].navigable
         ) {
-          possibilities.push([i, neighbors[j][0], neighbors[j][1]]);
+          let possibility = [i, neighbors[j][0], neighbors[j][1]];
+          let tile = this.state.spaceMap.map[neighbors[j][0]][neighbors[j][1]];
+
+          if (tile.controlledBy !== this.state.lastPlayerTurn) {
+            possibility.push("enter");
+          } else if (tile.sector.name.includes("Sector") && !enemiesInHex) {
+            possibility.push("claim");
+          } else if (tile.sector.name.includes("Sector") && enemiesInHex) {
+            possibility.push("duel");
+          } else if (!enemiesInHex) {
+            possibility.push("invade");
+          } else {
+            possibility.push("conquer");
+          }
+
+          possibilities.push(possibility);
         }
       }
       moves = moves.concat(possibilities);
@@ -115,7 +133,7 @@ class HexStarWars {
       let fleetIndex = move[0];
       let moveX = move[1];
       let moveY = move[2];
-      let tileInQuestion = this.state.spaceMap.map[moveX][moveY];
+      let action = move[3];
       let enemyFleets = this.state.players[this.state.lastPlayerTurn].fleets;
       let isEnemyFleet = false;
       for (let i = 0; i < enemyFleets.length; i++) {
@@ -127,19 +145,21 @@ class HexStarWars {
       let victory = true,
         halfVictory = true;
       if (results === undefined) {
-        if (
-          !isEnemyFleet &&
-          tileInQuestion.controlledBy === this.state.lastPlayerTurn &&
-          !tileInQuestion.sector.name.includes("Sector")
-        ) {
-          victory = this.simulateBattle(true, true);
-        } else if (isEnemyFleet) {
-          if (tileInQuestion.sector.name.includes("Sector")) {
+        switch (action) {
+          case "enter":
+            break;
+          case "claim":
+            break;
+          case "duel":
             victory = this.simulateBattle(false, true);
-          } else {
+            break;
+          case "invade":
+            victory = this.simulateBattle(true, true);
+            break;
+          case "conquer":
             halfVictory = this.simulateBattle(false, true);
             victory = halfVictory && this.simulateBattle(true, true);
-          }
+            break;
         }
       } else {
         if (results.length === 2) {
@@ -163,23 +183,22 @@ class HexStarWars {
     }
 
     let map = this.state.spaceMap.map;
-    let currentWinner = true,
-      lastWinner = true;
+    let currentCount = 0,
+      lastCount = 0;
     for (let i = 0; i < map.length; i++) {
       for (let j = 0; j < map[i].length; j++) {
         if (map[i][j].controlledBy === this.state.playerTurn) {
-          lastWinner = false;
+          currentCount++;
         }
         if (map[i][j].controlledBy === this.state.lastPlayerTurn) {
-          currentWinner = false;
+          lastCount++;
         }
       }
     }
-    if (currentWinner) {
+    if (lastCount === 0) {
       this.state.winner = this.state.playerTurn;
       this.state.gameOver = true;
-    }
-    if (lastWinner) {
+    } else if (currentCount === 0) {
       this.state.winner = this.state.lastPlayerTurn;
       this.state.gameOver = true;
     }

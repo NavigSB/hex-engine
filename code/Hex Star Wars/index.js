@@ -2,7 +2,7 @@ window.addEventListener("load", init);
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 
-const VIEWS = ["loading-view", "init-view", "screen-container"];
+const VIEWS = ["loading-view", "init-view", "game-container"];
 
 const FACTION_ICONS = {
   "The Republic": "venator.png",
@@ -68,7 +68,7 @@ function init() {
 async function startGame(map, playerFaction) {
   let game = new HexStarWars(map, playerFaction);
   let states = [];
-  switchViews("screen-container");
+  switchViews("game-container");
   displayGame(game);
   HexGrid.update();
   let aiPlayer = new ArtificialPlayer(game, 2, 10, 1.41);
@@ -90,12 +90,24 @@ async function startGame(map, playerFaction) {
         break;
       }
     }
-    game.playMove(chosenMove);
+
+    let result;
+    if (chosenMove[3] !== "enter" && chosenMove[3] !== "claim") {
+      result = await battleResult(chosenMove[3], true);
+    }
+
+    game.playMove(chosenMove, result);
     displayGame(game);
 
     id("ai-loading").classList.remove("hidden");
     let aiMove = await aiPlayer.selectMove();
-    game.playMove(aiMove);
+
+    result = undefined;
+    if (chosenMove[3] !== "enter" && chosenMove[3] !== "claim") {
+      result = await battleResult(chosenMove[3], false);
+    }
+
+    game.playMove(aiMove, result);
     displayGame(game);
     id("ai-loading").classList.add("hidden");
   }
@@ -162,6 +174,31 @@ function displayGame(game) {
   for (let i = 0; i < aiFleets.length; i++) {
     addFleetToTile(aiFleets[i][0], aiFleets[i][1], players[1]);
   }
+}
+
+async function battleResult(actionType, playerAttacking) {
+  id("second-attack-roll").classList.add("hidden");
+  id("second-defend-roll").classList.add("hidden");
+  id("land-battle").classList.add("hidden");
+  id("space-battle").classList.add("hidden");
+  switch (actionType) {
+    case "duel":
+      id("space-battle").classList.remove("hidden");
+      break;
+    case "invasion":
+      id("land-battle").classList.remove("hidden");
+      break;
+    case "conquer":
+      id("second-attack-roll").classList.remove("hidden");
+      id("second-defend-roll").classList.remove("hidden");
+      break;
+  }
+  id("battle-menu").classList.remove("hidden");
+  return new Promise((resolve) => {
+    function submit() {
+
+    }
+  });
 }
 
 function setFleetsOnTile(x, y, unitArray) {

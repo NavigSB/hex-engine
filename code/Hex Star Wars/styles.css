@@ -5,6 +5,12 @@ body {
   font-family: "Open Sans", sans-serif;
 }
 
+@media screen and (max-width: 991px) {
+  #battle-menu {
+    width: 95%;
+  }
+}
+
 /* Extra small devices (phones, 600px and down) */
 @media only screen and (max-width: 600px) {
   h1 {
@@ -31,6 +37,9 @@ body {
   h1 {
     font-size: 3em;
   }
+  #battle-menu {
+    width: 50%;
+  }
 }
 
 /* Extra large devices (large laptops and desktops, 1200px and up) */
@@ -40,14 +49,42 @@ body {
   }
 }
 
-#screen-container {
+#screen-container, #battle-menu {
   border-style: solid;
   border-width: 3px;
   border-radius: 10px;
   padding: 2%;
   margin: auto;
   margin-top: 50px;
+}
+
+#screen-container {
   background-color: rgb(0, 0, 0);
+}
+
+#battle-menu {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 50%;
+  margin-bottom: 50px;
+}
+
+.dice-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.dice-roll {
+  display: flex;
+  width: 100%;
+  justify-content: space-around;
+}
+
+.dice {
+  margin-block-start: 1em;
+  margin-block-end: 1em;
 }
 
 #hex-tooltip {

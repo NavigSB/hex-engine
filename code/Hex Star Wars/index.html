@@ -33,8 +33,66 @@
       <h1>Loading...</h1>
     </section>
     <div id="ai-loading" class="hidden">Loading...</div>
-    <div id="screen-container" class="hidden">
-      <svg id="screen"></svg>
+    <div id="game-container" class="hidden">
+      <div id="battle-menu" class="">
+        <h2>Rolls Remaining: 0</h2>
+        <section>
+          <h3>Attacker:</h3>
+          <div class="dice-container">
+            <div id="first-attack-roll" class="dice-roll">
+              <h4 class="dice">0</h4>
+              <h4 class="dice">0</h4>
+              <h4 class="dice">0</h4>
+            </div>
+            <div id="second-attack-roll" class="dice-roll hidden">
+              <h4 class="dice">0</h4>
+              <h4 class="dice">0</h4>
+              <h4 class="dice">0</h4>
+            </div>
+          </div>
+        </section>
+        <section style="margin-bottom: 15px">
+          <h3>Defender:</h3>
+          <div class="dice-container">
+            <div id="first-defend-roll" class="dice-roll">
+              <h4 class="dice">0</h4>
+              <h4 class="dice">0</h4>
+            </div>
+            <div id="second-defend-roll" class="dice-roll hidden">
+              <h4 class="dice">0</h4>
+              <h4 class="dice">0</h4>
+            </div>
+          </div>
+        </section>
+        <button>Roll!</button>
+        <hr style="width: 100%; margin-top: 30px;">
+        <h2>Input custom results:</h2>
+        <form>
+          <div id="space-battle">
+            <label>Space Battle</label>
+            <select id="space-battle-select">
+              <option value="none"></option>
+              <option value="win">Win</option>
+              <option value="lose">Lose</option>
+            </select>
+          </div>
+          <br><br>
+          <div id="land-battle">
+            <label>Land Battle</label>
+            <select id="land-battle-select">
+              <option value="none"></option>
+              <option value="win">Win</option>
+              <option value="lose">Lose</option>
+            </select>
+          </div>
+          <br><br>
+        </form>
+        <hr style="width: 100%; margin-bottom: 30px;">
+        <button id="sumbit-results">Enter Results</button>
+      </div>
+      <div id="screen-container">
+        <svg id="screen"></svg>
+      </div>
     </div>
   </body>
 </html>
