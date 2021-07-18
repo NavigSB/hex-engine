@@ -175,9 +175,15 @@ class HexStarWars {
           this.state.playerTurn;
         this.moveFleet(this.state.playerTurn, fleetIndex, moveX, moveY);
       } else {
+        console.log("Removing fleet because the currentPlayer lost...");
         this.removeFleet(this.state.playerTurn, fleetIndex);
       }
       if (victory || halfVictory) {
+        if (action !== "enter" && action !== "claim") {
+          console.log(
+            "Removing fleet because the lastPlayer lost or half lost..."
+          );
+        }
         this.removeFleetsFromPos(this.state.lastPlayerTurn, moveX, moveY);
       }
     }

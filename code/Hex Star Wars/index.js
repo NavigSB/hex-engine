@@ -93,23 +93,25 @@ async function startGame(map, playerFaction) {
 
     let result;
     if (chosenMove[3] !== "enter" && chosenMove[3] !== "claim") {
-      result = await battleResult(chosenMove[3], true);
+      result = await battleResult(chosenMove[3]);
     }
 
-    game.playMove(chosenMove, result);
+    game.playMove(chosenMove, false, result);
     displayGame(game);
+    console.log(JSON.parse(JSON.stringify(game.state)));
 
     id("ai-loading").classList.remove("hidden");
-    let aiMove = await aiPlayer.selectMove();
+    // let aiMove = await aiPlayer.selectMove();
+    let aiMove = game.moves()[0];
 
     result = undefined;
-    if (chosenMove[3] !== "enter" && chosenMove[3] !== "claim") {
-      result = await battleResult(chosenMove[3], false);
+    if (aiMove[3] !== undefined && aiMove[3] !== "enter" && aiMove[3] !== "claim") {
+      result = await battleResult(chosenMove[3]);
     }
-
-    game.playMove(aiMove, result);
+    game.playMove(aiMove, false, result);
     displayGame(game);
     id("ai-loading").classList.add("hidden");
+    console.log(JSON.parse(JSON.stringify(game.state)));
   }
 }
 
@@ -176,28 +178,145 @@ function displayGame(game) {
   }
 }
 
-async function battleResult(actionType, playerAttacking) {
+async function battleResult(actionType) {
   id("second-attack-roll").classList.add("hidden");
   id("second-defend-roll").classList.add("hidden");
   id("land-battle").classList.add("hidden");
+  id("land-battle-select").selectedIndex = 0;
   id("space-battle").classList.add("hidden");
+  id("space-battle-select").selectedIndex = 0;
+  console.log(actionType);
   switch (actionType) {
     case "duel":
       id("space-battle").classList.remove("hidden");
       break;
-    case "invasion":
+    case "invade":
       id("land-battle").classList.remove("hidden");
       break;
     case "conquer":
       id("second-attack-roll").classList.remove("hidden");
       id("second-defend-roll").classList.remove("hidden");
+      id("land-battle").classList.remove("hidden");
+      id("space-battle").classList.remove("hidden");
       break;
   }
+  id("hex-tooltip").classList.add("hidden");
   id("battle-menu").classList.remove("hidden");
   return new Promise((resolve) => {
-    function submit() {
+    let round = [
+      [0, 0, 0],
+      [0, 0],
+    ];
+    let roundNum = "first";
+    let attackerHalfVictory, attackerVictory;
+    let gameOver = false;
+    let result;
 
+    [
+      "first-attack-roll",
+      "first-defend-roll",
+      "second-attack-roll",
+      "second-defend-roll",
+    ].forEach((elId) => {
+      Array.prototype.forEach.call(id(elId).children, (diceEl) => {
+        diceEl.classList.remove("hidden");
+        diceEl.innerHTML = "X";
+      });
+    });
+
+    id("roll-btn").removeAttribute("disabled");
+
+    function roll() {
+      round = riskDiceIteration(round[0], round[1]);
+      Array.prototype.forEach.call(
+        id(roundNum + "-attack-roll").children,
+        (diceEl, i) => {
+          if (round[0][i] !== undefined) {
+            diceEl.innerHTML = round[0][i];
+          } else {
+            diceEl.classList.add("hidden");
+          }
+        }
+      );
+      Array.prototype.forEach.call(
+        id(roundNum + "-defend-roll").children,
+        (diceEl, i) => {
+          if (round[1][i] !== undefined) {
+            diceEl.innerHTML = round[1][i];
+          } else {
+            diceEl.classList.add("hidden");
+          }
+        }
+      );
+      if (round[0].length === 0 || round[1].length === 0) {
+        gameOver = true;
+        let attackerWon;
+        if (round[0].length === 0 && round[1].length === 0) {
+          attackerWon = false;
+        } else {
+          attackerWon = round[0].length > 0;
+        }
+        if (actionType === "conquer" && roundNum === "first") {
+          attackerHalfVictory = attackerWon;
+          round = [
+            [0, 0, 0],
+            [0, 0],
+          ];
+          roundNum = "second";
+          gameOver = false;
+        } else {
+          attackerVictory = attackerWon;
+        }
+      }
+
+      if (gameOver || attackerHalfVictory === false) {
+        if(attackerHalfVictory === false) {
+          attackerVictory = false;
+        }
+        result = [attackerVictory];
+        if (attackerHalfVictory !== undefined) {
+          result.unshift(attackerHalfVictory);
+        }
+        id("roll-btn").removeEventListener("click", roll);
+        id("roll-btn").setAttribute("disabled", "disabled");
+      }
     }
+
+    function done() {
+      let spaceWin = id("space-battle-select").value;
+      let landWin = id("land-battle-select").value;
+      if(spaceWin !== "none" || landWin !== "none") {
+        switch(spaceWin) {
+          case "win": spaceWin = true; break;
+          case "lose": spaceWin = false; break;
+          case "none": spaceWin = null; break;
+        }
+        switch(landWin) {
+          case "win": landWin = true; break;
+          case "lose": landWin = false; break;
+          case "none": landWin = null; break;
+        }
+        let customResult = [];
+        if(spaceWin !== null) {
+          customResult.push(spaceWin);
+        }
+        if(landWin !== null) {
+          customResult.push(landWin);
+        }
+        id("battle-menu").classList.add("hidden");
+        id("sumbit-results-btn").removeEventListener("click", done);
+        console.log(JSON.parse(JSON.stringify(customResult)));
+        resolve(customResult);
+      }else if(gameOver) {
+        id("battle-menu").classList.add("hidden");
+        id("sumbit-results-btn").removeEventListener("click", done);
+        console.log(JSON.parse(JSON.stringify(result)));
+        resolve(result);
+      }
+    }
+
+    id("roll-btn").addEventListener("click", roll);
+    id("sumbit-results-btn").addEventListener("click", done);
   });
 }
 
@@ -246,6 +365,50 @@ function clearFleetsFromTile(x, y) {
   for (let i = 0; i < fleets.length; i++) {
     HexGrid.removeUnit(fleets[i]);
   }
+}
+
+function riskDiceIteration(attackingDice, defendingDice) {
+  if (attackingDice[0] !== 0) {
+    for (
+      let i = 0;
+      i < Math.min(attackingDice.length, defendingDice.length);
+      i++
+    ) {
+      if (
+        attackingDice[i] < defendingDice[i] ||
+        attackingDice[i] === defendingDice[i]
+      ) {
+        attackingDice[i] = -1;
+      } else {
+        defendingDice[i] = -1;
+      }
+    }
+    for (let i = 0; i < attackingDice.length; i++) {
+      if (attackingDice[i] === -1) {
+        attackingDice.splice(i, 1);
+        i--;
+      }
+    }
+    for (let i = 0; i < defendingDice.length; i++) {
+      if (defendingDice[i] === -1) {
+        defendingDice.splice(i, 1);
+        i--;
+      }
+    }
+  }
+  for (let i = 0; i < attackingDice.length; i++) {
+    attackingDice[i] = rollDie();
+  }
+  for (let i = 0; i < defendingDice.length; i++) {
+    defendingDice[i] = rollDie();
+  }
+  attackingDice.sort((a, b) => b - a);
+  defendingDice.sort((a, b) => b - a);
+  return [attackingDice, defendingDice];
+}
+
+function rollDie() {
+  return Math.floor(Math.random() * 6 + 1);
 }
 
 function switchViews(view) {
