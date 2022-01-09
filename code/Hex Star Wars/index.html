@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Hex Star Wars</title>
+    <script src="common/hexgrid.js"></script>
+    <script src="common/MCTS.js"></script>
+    <link rel="stylesheet" href="common/hexgrid-styles.css" />
+    <link rel="stylesheet" href="styles.css" />
+    <script src="perlin.js"></script>
+    <script src="space-map.js"></script>
+    <script src="hex-star-wars.js"></script>
+    <script src="index.js"></script>
+    <link rel="preconnect" href="https://fonts.gstatic.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Open+Sans&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <section id="init-view">
+      <h1>Welcome to the Hex Star Wars!</h1>
+      <p>What faction do you want to play?</p>
+      <select id="faction-select">
+        <option value="republic">The Republic</option>
+        <option value="cis">The Confederacy</option>
+        <option value="rebellion">The Rebellion</option>
+        <option value="empire">The Empire</option>
+      </select>
+      <button id="submit-btn">Okay</button>
+    </section>
+    <section id="loading-view" class="hidden">
+      <h1>Loading...</h1>
+    </section>
+    <div id="ai-loading" class="hidden">Loading...</div>
+    <div id="game-container" class="hidden">
+      <div id="battle-menu" class="hidden">
+        <h2>Risk Roll</h2>
+        <section>
+          <h3>Attacker:</h3>
+          <div class="dice-container">
+            <div id="first-attack-roll" class="dice-roll">
+              <h4 class="dice">X</h4>
+              <h4 class="dice">X</h4>
+              <h4 class="dice">X</h4>
+            </div>
+            <div id="second-attack-roll" class="dice-roll hidden">
+              <h4 class="dice">X</h4>
+              <h4 class="dice">X</h4>
+              <h4 class="dice">X</h4>
+            </div>
+          </div>
+        </section>
+        <section style="margin-bottom: 15px">
+          <h3>Defender:</h3>
+          <div class="dice-container">
+            <div id="first-defend-roll" class="dice-roll">
+              <h4 class="dice">X</h4>
+              <h4 class="dice">X</h4>
+            </div>
+            <div id="second-defend-roll" class="dice-roll hidden">
+              <h4 class="dice">X</h4>
+              <h4 class="dice">X</h4>
+            </div>
+          </div>
+        </section>
+        <button id="roll-btn">Roll!</button>
+        <hr style="width: 100%; margin-top: 30px;">
+        <h2>Input custom results:</h2>
+        <form>
+          <div id="space-battle">
+            <label>Space Battle</label>
+            <select id="space-battle-select">
+              <option value="none"></option>
+              <option value="win">Win</option>
+              <option value="lose">Lose</option>
+            </select>
+          </div>
+          <br><br>
+          <div id="land-battle">
+            <label>Land Battle</label>
+            <select id="land-battle-select">
+              <option value="none"></option>
+              <option value="win">Win</option>
+              <option value="lose">Lose</option>
+            </select>
+          </div>
+          <br><br>
+        </form>
+        <hr style="width: 100%; margin-bottom: 40px;">
+        <button id="sumbit-results-btn">Enter Results</button>
+      </div>
+      <div id="screen-container">
+        <svg id="screen"></svg>
+      </div>
+    </div>
+  </body>
+</html>

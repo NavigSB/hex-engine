@@ -1,0 +1,218 @@
+body {
+  margin: auto;
+  text-align: center;
+  width: 95%;
+  font-family: "Open Sans", sans-serif;
+}
+
+@media screen and (max-width: 991px) {
+  #battle-menu {
+    width: 95%;
+  }
+}
+
+/* Extra small devices (phones, 600px and down) */
+@media only screen and (max-width: 600px) {
+  h1 {
+    font-size: 4em;
+  }
+}
+
+/* Small devices (portrait tablets and large phones, 600px and up) */
+@media only screen and (min-width: 600px) {
+  h1 {
+    font-size: 4em;
+  }
+}
+
+/* Medium devices (landscape tablets, 768px and up) */
+@media only screen and (min-width: 768px) {
+  h1 {
+    font-size: 3em;
+  }
+}
+
+/* Large devices (laptops/desktops, 992px and up) */
+@media only screen and (min-width: 992px) {
+  h1 {
+    font-size: 3em;
+  }
+  #battle-menu {
+    width: 50%;
+  }
+}
+
+/* Extra large devices (large laptops and desktops, 1200px and up) */
+@media only screen and (min-width: 1200px) {
+  h1 {
+    font-size: 3em;
+  }
+}
+
+#screen-container, #battle-menu {
+  border-style: solid;
+  border-width: 3px;
+  border-radius: 10px;
+  padding: 2%;
+  margin: auto;
+  margin-top: 50px;
+}
+
+#screen-container {
+  background-color: rgb(0, 0, 0);
+}
+
+#battle-menu {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 50%;
+  margin-bottom: 50px;
+}
+
+.dice-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.dice-roll {
+  display: flex;
+  width: 100%;
+  justify-content: space-around;
+}
+
+.dice {
+  margin-block-start: 1em;
+  margin-block-end: 1em;
+}
+
+#hex-tooltip {
+  background-color: rgba(46, 46, 46, 0.75);
+  color: white;
+  border-radius: 5px;
+  width: 100px;
+  padding: 5px;
+}
+
+#submit-btn {
+  display: block;
+  margin: auto;
+  margin-top: 20px;
+}
+
+#done-btn {
+  font-size: 1.5em;
+  margin-bottom: 5vh;
+}
+
+.options-card {
+  border-style: solid;
+  border-width: 2px;
+  border-radius: 10px;
+  margin: 5vh;
+  padding: 20px;
+  background-color: rgb(216, 216, 216);
+  font-size: 1.5em;
+}
+
+.option-title {
+  margin: 5px;
+}
+
+.option-input {
+  margin: 10px;
+}
+
+.hex {
+  fill: rgb(156, 156, 156);
+  fill-opacity: 50%;
+  stroke: white;
+  cursor: crosshair;
+}
+
+.hex-planet {
+  fill: rgb(29, 29, 29);
+}
+
+.hex-planet:hover {
+  fill: rgb(90, 133, 104);
+}
+
+.hex-space {
+  opacity: 0;
+}
+
+.hex-hover {
+  fill: transparent;
+  stroke: white;
+  cursor: crosshair;
+}
+
+.hex-hover:hover {
+  fill: #d3d3d3;
+  fill-opacity: 50%;
+  cursor: pointer;
+}
+
+.unit {
+  pointer-events: none;
+}
+
+.arrow {
+  stroke: black;
+  fill: black;
+}
+
+.box {
+  stroke: black;
+  fill: transparent;
+}
+
+.clipped {
+  clip-path: url(#hex-clip);
+}
+
+.republic {
+  fill: red;
+  fill-opacity: 15%;
+}
+
+.republic:hover {
+  fill: rgb(255, 51, 0);
+}
+
+.cis {
+  fill: blue;
+  fill-opacity: 15%;
+}
+
+.cis:hover {
+  fill: rgb(0, 110, 255);
+}
+
+.rebellion {
+  fill: red;
+  fill-opacity: 15%;
+}
+
+.rebellion:hover {
+  fill: rgb(255, 51, 0);
+}
+
+.empire {
+  fill: rgb(0, 0, 0);
+  fill-opacity: 15%;
+}
+
+.empire {
+  fill: rgb(34, 30, 30);
+}
+
+.unit-hover {
+  cursor: pointer;
+}
+
+.unit-hover:hover {
+  opacity: 50%;
+}

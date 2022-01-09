@@ -56,6 +56,17 @@ var HexGrid = (function() {
 		}
 	}
 
+	API.getHexesInRange = function(startingHex, range, includeCenter) {
+		let rangedHexes = [];
+		for(let i = 0; i < hexes.length; i++) {
+			let dist = hexDist(startingHex, hexes[i]);
+			if((dist <= range && dist > 0) || (dist === 0 && includeCenter)) {
+				rangedHexes.push(hexes[i]);
+			}
+		}
+		return rangedHexes;
+	}
+
 	API.moveUnit = async function() {
 		let unit = await API.selectAnyUnit();
 		let tile = await API.selectAnyHex();
@@ -63,8 +74,22 @@ var HexGrid = (function() {
 		updateScreen();
 	}
 
+	API.moveUnitWithAttributes = async function(attributes) {
+		let unit = await API.selectUnitByAttributes(attributes);
+		let tile = await API.selectAnyHex();
+		unitMove(unit, tile);
+		updateScreen();
+	}
+
 	API.moveUnitInRange = async function(range) {
 		let unit = await API.selectAnyUnit();
+		let tile = await API.selectRangedHex(unit.hex, range);
+		unitMove(unit, tile);
+		updateScreen();
+	}
+
+	API.moveUnitInRangeWithAttributes = async function(attributes, range) {
+		let unit = await API.selectUnitByAttributes(attributes);
 		let tile = await API.selectRangedHex(unit.hex, range);
 		unitMove(unit, tile);
 		updateScreen();
@@ -87,18 +112,40 @@ var HexGrid = (function() {
 	}
 
 	API.selectRangedHex = async function(startingHex, range, includeCenter) {
-		let rangedHexes = [];
-		for(let i = 0; i < hexes.length; i++) {
-			let dist = hexDist(startingHex, hexes[i]);
-			if((dist <= range && dist > 0) || (dist === 0 && includeCenter)) {
-				rangedHexes.push(hexes[i]);
-			}
-		}
-		let selected = await selectHex(rangedHexes);
+		let selected = await selectHex(API.getHexesInRange(startingHex, range, includeCenter));
+		return selected;
+	}
+
+	API.customSelectHex = async function(hexes) {
+		let selected = await selectHex(hexes);
 		return selected;
 	}
 
 	API.selectAnyUnit = async function() {
+		let selected = await selectUnit(units);
+		return selected;
+	}
+
+	API.selectUnitByAttributes = async function(attributes) {
+		let unitsToSelect = [];
+		let attrKeys = Object.keys(attributes);
+		for(let i = 0; i < units.length; i++) {
+			let containsAllKeys = true;
+			for(let key in attrKeys) {
+				if(units[i].attributes[key] !== attributes[key]) {
+					containsAllKeys = false;
+					break;
+				}
+			}
+			if(containsAllKeys) {
+				unitsToSelect.push(units[i]);
+			}
+		}
+		let selected = await selectUnit(unitsToSelect);
+		return selected;
+	}
+
+	API.customSelectUnit = async function(units) {
 		let selected = await selectUnit(units);
 		return selected;
 	}
@@ -120,6 +167,22 @@ var HexGrid = (function() {
 		hex.obstructions.push(newObs);
 		obstructions.push(newObs);
 		return newObs;
+	}
+
+	API.removeObstruction = function(obstruction) {
+		let parentHex = obstruction.hex;
+		for(let i = 0; i < obstructions.length; i++) {
+			if(obstructions[i] === obstruction) {
+				obstructions.splice(i, 1);
+				break;
+			}
+		}
+		for(let i = 0; i < parentHex.obstructions.length; i++) {
+			if(parentHex.obstructions[i] === obstruction) {
+				parentHex.removeObstruction(i);
+				break;
+			}
+		}
 	}
 
 	API.drawArrow = function(startTile, endTile) {
@@ -191,6 +254,8 @@ var HexGrid = (function() {
 	class Hex {
 
 		constructor(tileX, tileY) {
+			this.tileX = tileX;
+			this.tileY = tileY;
 			let cubeCoords = tileToCubeCoords(tileX, tileY);
 			this.x = cubeCoords[0];
 			this.y = cubeCoords[1];
@@ -200,15 +265,24 @@ var HexGrid = (function() {
 			this.path = document.createElementNS(SVG_NS, "path");
 			this.path.id = this.x + "_" + this.y + "_" + this.z;
 			this.attributes = {};
-			let thisHex = this;
-			this.path.addEventListener("mousemove", function(){
-				if(Object.keys(thisHex.attributes).length > 0) {
-					id("hex-tooltip").innerHTML = thisHex.getAttrStr();
-					id("hex-tooltip").classList.remove("hidden");
-				}else{
-					id("hex-tooltip").classList.add("hidden");
-				}
-			});
+			this.path.addEventListener("mousemove", () => this.mouseoverCallback(this));
+		}
+
+		mouseoverCallback(thisHex) {
+			if(Object.keys(thisHex.attributes).length > 0) {
+				id("hex-tooltip").innerHTML = thisHex.getAttrStr();
+				id("hex-tooltip").classList.remove("hidden");
+			}else{
+				id("hex-tooltip").classList.add("hidden");
+			}
+		}
+
+		getTileCoords() {
+			return [this.tileX, this.tileY];
+		}
+
+		getCubeCoords() {
+			return [this.x, this.y, this.z];
 		}
 
 		addUnit(unit) {
@@ -231,9 +305,7 @@ var HexGrid = (function() {
 			for(let i = 0; i < DIRS.length; i++) {
 				try {
 					neighbors.push(getHexFromCoords(this.x + DIRS[i][0], this.y + DIRS[i][1], this.z + DIRS[i][2]));
-				} catch(e) {
-
-				}
+				} catch(e) {}
 			}
 			return neighbors;
 		}
@@ -245,6 +317,11 @@ var HexGrid = (function() {
 
 		addObstruction(obstruction) {
 			this.obstructions.push(obstruction);
+			updateScreen();
+		}
+
+		removeObstruction(index) {
+			this.obstructions.splice(index, 1);
 			updateScreen();
 		}
 
@@ -264,7 +341,7 @@ var HexGrid = (function() {
 		getAttrStr() {
 			let attrStr = "";
 			for(let attribute in this.attributes) {
-				attrStr += attribute + ": " + this.attributes[attribute] + "<br>";
+				attrStr += "<strong>" + attribute + "</strong>: <br>" + this.attributes[attribute] + "<br>";
 			}
 			return attrStr.substring(0, attrStr.length - 4);
 		}
@@ -289,10 +366,7 @@ var HexGrid = (function() {
 				this.backgroundImage.setAttribute("y", pathBoundingBox.y);
 				this.backgroundImage.setAttribute("width", pathBoundingBox.width);
 				this.backgroundImage.setAttribute("height", pathBoundingBox.height);
-				let wrap = document.createElement("div");
-				wrap.appendChild(this.backgroundImage.cloneNode(true));
-				let content = wrap.innerHTML;
-				id("screen").innerHTML = content + id("screen").innerHTML;
+				id("screen").prepend(this.backgroundImage);
 				this.path = id("screen").getElementById(this.x + "_" + this.y + "_" + this.z);
 			}
 		}
@@ -344,7 +418,7 @@ var HexGrid = (function() {
 			}
 			this.img.addEventListener("mouseenter", function(){
 				thisUnit.hex.shownUnit = thisUnit;
-				if(Object.keys(thisUnit.attributes).length > 0) {
+				if(Object.keys(thisUnit.attributes).length > 0 && thisUnit.attributes.showAttributes !== false) {
 					id("hex-tooltip").innerHTML = thisUnit.getAttrStr();
 					id("hex-tooltip").classList.remove("hidden");
 				}else{
@@ -361,7 +435,7 @@ var HexGrid = (function() {
 				if(attribute === "showUnit") {
 					attrStr += this.getTooltipImageHTML();
 				}else{
-					attrStr += attribute + ": " + this.attributes[attribute];
+					attrStr += "<em>" + attribute + "</em>: " + this.attributes[attribute];
 				}
 				attrStr += "<br>";
 			}
@@ -552,6 +626,9 @@ var HexGrid = (function() {
 	function setTooltipToMouse(event) {
 		id("hex-tooltip").style.left = event.pageX + "px";
 		id("hex-tooltip").style.top = event.pageY + "px";
+		if(event.path[0] === id("screen") || event.path[0] === id("screen").parentElement) {
+			id("hex-tooltip").classList.add("hidden");
+		}
 	}
 
 	async function selectHex(hexes) {
