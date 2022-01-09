@@ -1,0 +1,75 @@
+ARMOR ASSAULT:
+  Issue an order to 4 tanks. Tanks in close assault roll an additional die.
+  If you have no tanks, issue order to any 1 unit
+
+COUNTER ATTACK:
+  Issue the same order just played by your opponent (make sure to swap sides
+  on the array)
+
+DIRECT FROM HQ:
+  Issue an order to 4 units of your choice 
+
+INFANTRY ASSAULT:
+  Issue an order to all infantry units in 1 section. Infantry now have +1
+  to movement (2 and battle or 3 and no battle). If you have no infantry,
+  issue order to any 1 unit
+
+MOVE OUT:
+  Issue an order to 4 infantry units. If you have no infantry, issue order
+  to any 1 unit
+
+AIR POWER:
+  Target a group of 4 or fewer enemy units adjacent to each other. Roll 2
+  battle dice per hex (Allied air attack) or 1 per hex (Axis air attack),
+  ignoring any terrain battle die reduction. Score 1 hit for each die that
+  matches the unit's symbol, a grenade or a star. For each flag, retreat
+  1 hex. Flags may not be ignored
+
+AMBUSH:
+  After opponent declares a Close Assault, but before he rolls his dice,
+  play this card. Roll your battle dice first. If opponent's unit wasn't
+  eliminated or forced to retreat, it may then attack normally. At the
+  end of the turn, draw your command card first
+
+ARTILLERY BOMBARD:
+  Issue an order to all artillery units. Units may move up to 3 hexes OR
+  battle twice. If you do not have any, order any 1 unit
+
+BARRAGE:
+  Target any 1 enemy unit. Roll 4 battle dice, ignoring any terrain battle
+  die reduction. Score 1 hit for each die matching the unit's symbol or
+  grenade. For each flag, retreat 1 hex. Flags may not be ignored
+
+BEHIND ENEMY LINES:
+  Issue an order to 1 infantry unit. Unit may move up to 3 hexes. Unit may
+  battle with 1 additional die, then move again up to 3 hexes. Terrain
+  movement restrictions are ignored, but not battle restrictions. If you
+  have no infantry, issue an order to 1 unit of your choice
+
+CLOSE ASSAULT:
+  Issue an order to all infantry and/or tanks adjacent to enemy units. These
+  units battle with 1 additional die. Units may not move before they battle,
+  but may take ground/overrun when successful
+
+DIG-IN:
+  Issue an order to 4 infantry units. The units improve their position by
+  placing an available sandbag on the units' hexes. If you have none, issue
+  an order to any 1 unit
+
+FIREFIGHT:
+  Issue an order to 4 units to open fire. Units in a firefight may not be
+  adjacent to an enemy unit, and may not move. Firefighting units roll 1
+  additional die
+
+MEDICS & MECHANICS:
+  Issue an order to 1 unit that has suffered casualties. Roll 1 battle die
+  for each command card you have, including this card. For each die matching
+  the unit's symbol or a star, 1 lost figure of that unit is returned to
+  duty. A unit may not gain more figures than it originally had. If the
+  unit recovers at least 1 figure, it may also be issued an order
+
+THEIR FINEST HOUR:
+  Roll 1 battle die for each command card you have, including this card. For
+  each unit symbol rolled, 1 unit of this type is ordered. For each star
+  rolled, 1 unit of your choice is ordered. Ordered units battle with 1
+  additional die. Reshuffle the deck and discard pile

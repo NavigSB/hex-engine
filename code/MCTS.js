@@ -210,15 +210,6 @@ var ArtificialPlayer = (function() {
 		return new Worker(url);
 	}
 
-	function createWorker(fn) {
-		var blob = new Blob(['self.onmessage = ', fn.toString()], {
-			type: 'text/javascript'
-		});
-		var url = URL.createObjectURL(blob);
-
-		return new Worker(url);
-	}
-
 	function camelCaseToHypens(str) {
 		let arr = str.split(/(?<=[^A-Z](?=[A-Z]))|(?=[A-Z][^A-Z])/g);
 		let hypenated = "";

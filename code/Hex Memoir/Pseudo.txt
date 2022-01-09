@@ -1,0 +1,169 @@
+
+Index:
+
+main() {
+    initializeGrid(13, 9);
+    terrainArr = generateTerrain();
+    troopsArr = generateTroopPos(terrainArr);
+    memoirGame = new MemoirGame(terrainArr, troopsArr);
+    aiPlayer = new StochasticArtificialPlayer(memoirGame);
+}
+
+-------------------------------------------------------------------
+
+BoardPG: 
+
+generateTerrain() {
+
+}
+
+generateTroopPos() {
+    
+}
+
+-------------------------------------------------------------------
+
+MemoirGame:
+
+//Obviously you have to make all these functions too... 
+//Maybe they can go in a separate file
+CARDS = [
+    {
+        id: 0,
+        name: "General Advance",
+        func: generalAdvance
+    },
+    {
+        id: 1,
+        name: "Pincer Move",
+        func: pincerMove
+    },
+    {
+        id: 2,
+        name: "Recon in Force",
+        func: reconInForce
+    },
+    {
+        id: 3,
+        name: "Recon in Force",
+        func: reconInForce
+    },
+    {
+        id: 4,
+        name: "Recon in Force",
+        func: reconInForce
+    },
+    ...
+];
+
+constructor(terrain, entities (like the troops and obstacles and stuff)) {
+    this.shuffles = [];
+    this.shuffles.push(shuffle(CARDS));
+    this.terrain = terrain;
+    this.state = {
+        entities: entities,
+        turnCount: 0,
+        playerTurn: 0,
+        victoryPoints: [0, 0],
+        currentDeckShuffle: 0,
+        playerHands: [
+            [shuffles[0][0], shuffles[0][2], shuffles[0][4], shuffles[0][6], shuffles[0][8]],
+            [shuffles[0][1], shuffles[0][3], shuffles[0][5], shuffles[0][7], shuffles[0][9]],
+        ],
+        nextDrawnCard: 10,
+        nextPhase: undefined,
+    };
+}
+
+getState() {
+    return this.state;
+}
+
+setState(state) {
+    this.state = state;
+}
+
+cloneState() {
+    return {
+        entities: this.state.entities.slice(0),
+        turnCount: this.state.turnCount,
+        playerTurn: this.state.playerTurn,
+        victoryPoints: this.state.victoryPoints.slice(0),
+        currentDeckShuffle: this.state.currentDeckShuffle,
+        playerHands: this.state.playerHands.slice(0),    //This might not work!
+        nextDrawnCard: this.state.nextDrawnCard,
+        nextPhase: this.state.nextPhase,
+    };
+}
+
+moves() {
+    if(this.state.nextPhase == undefined) {
+        return this.state.playerHands[this.state.playerTurn].map((card) => {
+            return card.id;
+        });
+    }
+    return this.state.nextPhase.function(this.state.nextPhase);
+}
+
+playMove(move) {
+    //Check if command card
+    if(typeof move == "number") {
+        this.state.nextPhase = {
+            function: CARDS[move].func,
+            phaseName: undefined,
+        };
+    }else{
+        //Expecting move to be JS object with an actions field and a nextPhase field
+        //Each action should also be a JS object with main ('B0,0') and options
+        for(let i = 0; i < move.actions.length; i++) {
+            let possibilities = [0, 1];
+            let action = move.actions[i];
+            let params = action.main.substring(1).split(",");
+            switch(action.main.substring(0, 1)) {
+                case "M": 
+                    //The '+' parses the numbers inline
+                    moveTroop(+params[0], +params[1], +params[2], +params[3], action.options);
+                    break;
+                case "B": 
+                    let result = battleTroop(+params[0], +params[1], action.options);
+                    //Simple math to get the index of possibility chosen and total possibilities from
+                    //two arrays of the same format, with one main and one addition. 
+                    //[a, b] and [c, d] => [a*d+c, b*d]
+                    possibilities = [possibilities[0]*result[1]+result[0], possibilities[1]*result[1]];
+                    break;
+            }
+        }
+        if(possibilities[1] > 1) {
+            return possibilities;
+        }
+    }
+}
+
+moveTroop(x1, y1, x2, y2, options) {
+    //Take the troop at the given position and move it to the target position using
+    //the state entities array.
+}
+
+battleTroop(troopX, troopY, diceCount, options) {
+    //Roll dice according to diceCount and options, then take health from the unit appropriately,
+    //and add to victoryPoints if the unit is eliminated. If any retreats are needed, change the
+    //phaseName of the current nextPhase in the state to have the phaseName of "retreat", 
+    //instead of, say, "move" or "fire".
+}
+
+getArrayCombos(...arrays) {
+    let combos = arrays[0];
+    for(let i = 1; i < arrays.length - 1; i++) {
+        combos = getTwoArrayCombos(combos, arrays[i]);
+    }
+    return combos;
+}
+
+getTwoArrayCombos(array1, array2) {
+    //Return an array of arrays, with each internal array being a combination of
+    //two elements, one in each array
+}
+
+shuffle(arr) {
+    //Copy arr, shuffle the copy, and return it
+}

@@ -1,0 +1,38 @@
+#screen-container {
+  display: flex;
+  justify-content: center;
+}
+
+#screen {
+  width: 90vh;
+}
+
+.hex {
+    fill: rgb(70, 126, 53);
+    fill-opacity: 50%;
+    stroke: black;
+    cursor: crosshair;
+}
+
+.hex-hover {
+    fill: transparent;
+    stroke: black;
+    cursor: crosshair;
+}
+
+.hex-hover:hover {
+  fill: #D3D3D3;
+  fill-opacity: 50%;
+}
+
+.allies {
+  fill: #4169e1;
+}
+
+.axis {
+  fill: #AB2330;
+}
+
+.terrained {
+  fill-opacity: 0%;
+}

@@ -35,6 +35,7 @@ var HexGrid = (function() {
 	let units = [];
 	let obstructions = [];
 	let arrows = [];
+	let unitColors = [];
 
 	API.create = function() {
 		buildScreen();
@@ -110,6 +111,10 @@ var HexGrid = (function() {
 		return newUnit;
 	}
 
+	API.colorUnit = function(unit, hexColorStr) {
+		colorUnit(unit, hexColorStr);
+	}
+
 	API.addObstruction = function(hex, imageSrc, attributesJSON) {
 		let newObs = new Obstruction(hex, imageSrc, attributesJSON);
 		hex.obstructions.push(newObs);
@@ -143,7 +148,7 @@ var HexGrid = (function() {
 		return getHexFromCoords(cubeX, cubeY, cubeZ);
 	}
 
-	//More expensive than other functions... Don't do constantly
+	//More expensive than cube... Don't use exessively
 	API.getHexFromTile = function(tileX, tileY) {
 		let cubeCoords = tileToCubeCoords(tileX, tileY);
 		return getHexFromCoords(cubeCoords[0], cubeCoords[1], cubeCoords[2]);
@@ -211,6 +216,11 @@ var HexGrid = (function() {
 			updateScreen();
 		}
 
+		addColoredUnit(unit, color) {
+			colorUnit(unit, color);
+			this.addUnit(unit);
+		}
+
 		getUnits() {
 			return this.units;
 		}
@@ -242,11 +252,13 @@ var HexGrid = (function() {
 			this.attributes = json;
 		}
 
-		addBackgroundImage(src) {
+		addBackgroundImage(src, noUpdate) {
 			this.backgroundImage = document.createElementNS(SVG_NS, "image");
 			this.backgroundImage.classList.add("clipped");
 			this.backgroundImage.setAttribute("href", src);
-			updateScreen();
+			if(!noUpdate) {
+				updateScreen();
+			}
 		}
 
 		getAttrStr() {
@@ -321,6 +333,10 @@ var HexGrid = (function() {
 			this.attributes = attributesJSON || {};
 			this.img = document.createElementNS(SVG_NS, "image");
 			this.img.setAttribute("href", imageSrc);
+			if(imageSrc.includes("svg")) {
+				this.img.setAttribute("width", sideLength / 4);
+				this.img.setAttribute("height", sideLength / 4);
+			}
 			this.auxiliaries = [];
 			let thisUnit = this;
 			if(classJSON.unitClass) {
@@ -605,6 +621,41 @@ var HexGrid = (function() {
 				units[i].img.classList.add(classJSON.unitClass);
 			}
 		}
+	}
+
+	function colorUnit(unit, hexColorStr) {
+		const COLOR_MODIFIER = 1.5;
+
+		if(!unitColors.includes("color" + hexColorStr)) {
+			if(hexColorStr.includes("#")) {
+				hexColorStr = hexColorStr.substring(1);
+			}
+			let hexArr = hexColorStr.split("");
+
+			//pluses turn the hex string to decimal
+			let r = +("0x" + hexArr[0] + hexArr[1]) * COLOR_MODIFIER;
+			let g = +("0x" + hexArr[2] + hexArr[3]) * COLOR_MODIFIER;
+			let b = +("0x" + hexArr[4] + hexArr[5]) * COLOR_MODIFIER;
+
+			let filter = document.createElementNS(SVG_NS, "filter");
+			filter.id = "color" + hexColorStr;
+			filter.setAttribute("x", "0%");
+			filter.setAttribute("y", "0%");
+			filter.setAttribute("width", "100%");
+			filter.setAttribute("height", "100%");
+			let matrix = document.createElementNS(SVG_NS, "feColorMatrix");
+			matrix.setAttribute("type", "matrix");
+			let row1 = (r/255) + " 0 0 0 0";
+			let row2 = "0 " + (g/255) + " 0 0 0";
+			let row3 = "0 0 " + (b/255) + " 0 0";
+			let row4 = "0 0 0 1 0";
+			matrix.setAttribute("values", row1 + "\n" + row2 + "\n" + row3 + "\n" + row4);
+			filter.appendChild(matrix);
+			API.addDef(filter);
+			unitColors.push("color" + hexColorStr);
+		}
+
+		unit.img.style.filter = "url(#color" + hexColorStr + ")";
 	}
 
 	function unitMove(unit, hex) {

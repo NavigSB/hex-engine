@@ -1,0 +1,83 @@
+body {
+  margin: auto;
+  text-align: center;
+  width: 95%;
+  font-family: "Open Sans", sans-serif;
+}
+
+#screen-container {
+  border-style: solid;
+  border-width: 3px;
+  border-radius: 10px;
+  padding: 2%;
+  margin: auto;
+  margin-top: 50px;
+}
+
+@media screen and (min-width: 992px) {
+  #screen-container {
+    width: 50%;
+  }
+}
+
+@media screen and (max-width: 991px) {
+  #screen-container {
+    width: 95%;
+  }
+}
+
+#screen {
+  width: 100%;
+}
+
+#grid-size-input {
+  background-color: white;
+  border-width: 1px;
+  border-style: solid;
+  position: fixed;
+  border-radius: 10px;
+  padding: 5px;
+  top: 90vh;
+}
+
+.hex {
+  fill: rgb(156, 156, 156);
+  fill-opacity: 50%;
+  stroke: black;
+  cursor: crosshair;
+}
+
+.hex-hover {
+  fill: transparent;
+  stroke: black;
+  cursor: crosshair;
+}
+
+.hex-hover:hover {
+  fill: #D3D3D3;
+  fill-opacity: 50%;
+}
+
+.unit-hover, .unit {
+  outline: 1px solid black;
+}
+
+.unit-hover:hover {
+	/*opacity: 50%;
+  filter: drop-shadow(0.35rem 0.35rem 0.4rem rgba(0, 0, 0, 0.5));
+	cursor: pointer;*/
+}
+
+.arrow {
+  stroke: black;
+  fill: black;
+}
+
+.box {
+  stroke: black;
+  fill: transparent;
+}
+
+.clipped {
+  clip-path: url(#hex-clip);
+}

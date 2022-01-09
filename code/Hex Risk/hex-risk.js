@@ -126,15 +126,89 @@ function createRegions(terrain, landTiles) {
 	Next, find all the factors of the evenCount, and store it in a nested array as pairs of values that multiply to get evenCount.
 	After that, you have your rectangular configurations. For each rectangular configuration, iterate through the available tiles
 	in the terrain array, and check the rectangles both of dimensions (width x height) and (height x width) for how many available tiles
-	it has. If either rectange contains enough available tiles, break and fill every available tile in that rectangle to have that region,
+	it has. If either rectangle contains enough available tiles, break and fill every available tile in that rectangle to have that region,
 	and move on to the next region. Otherwise, keep going until you find it. If you cannot, and nothing works out, you must increment your
 	eventCount by 2. The maximum amount of tiles you can have in one rectangle should be the amount of tiles in the region multiplied by
 	some value kept as a file constant. That way, you can control how far spread a single region is allowed to be. If all this checking
 	leads to no result, random tiles of the amount that would be in the region are set as neutral tiles. This is fullproof and will result
 	in no territory bonuses that are unfair.
 	*/
-	console.log(terrain);
-	return terrain;
+	
+	let totalTiles = 0;
+	let terrainLeft = JSON.parse(JSON.stringify(terrain));
+	let landTilesLeft = JSON.parse(JSON.stringify(landTiles));
+	for(let i = 5; i >= 0; i--) {
+		let tileCount = Math.round(REGION_BONUSES[i] * landTiles.length / 24);
+		if(i === 0) {
+			tileCount = landTiles.length - totalTiles;
+		}else{
+			totalTiles += tileCount;
+		}
+		//Round to the nearest even
+		let evenCount = Math.round(tileCount / 2) * 2;
+		let factors = [];
+		for(let j = 0; j < Math.sqrt(evenCount); j++) {
+			if(evenCount / j === Math.round(evenCount / j)) {
+				factors.push([j, evenCount / j]);
+			}
+		}
+		for(let j = 0; j < landTilesLeft.length; j++) {
+			let x = parseInt(landTilesLeft[j].split("_")[0]);
+			let y = parseInt(landTilesLeft[j].split("_")[1]);
+			if(terrainLeft[x][y] === 1) {
+				//For each currently available tile
+				//For each factor set
+				let spaceFound = [];
+				for(let f = 0; f < factors.length; f++) {
+					for(let k = 0; k < 8; k++) {
+						let width, height;
+						let multX = 1;
+						let multY = 1;
+						if(k < 4) {
+							width = factors[f][0];
+							height = factors[f][1];
+						}else{
+							width = factors[f][1];
+							height = factors[f][0];
+						}
+						if(Math.floor(k / 2) % 2 === 1) {
+							multX = -1;
+						}
+						if(k % 2 === 1) {
+							multY = -1;
+						}
+
+						let total = 0;
+						for(let w = 0; w < width; w++) {
+							for(let h = 0; h < height; h++) {
+								total += terrainLeft[x + w][y + h];
+							}
+						}
+						if(total === width * height) {
+							spaceFound = [width, height];
+							break;
+						}
+					}
+					//Is this right?
+					if(spaceFound.length !== 0) {
+						for(let w = 0; w < width; w++) {
+							for(let h = 0; h < height; h++) {
+								terrainLeft[x + w][y + h] = i;
+								landTilesLeft.splice(landTilesLeft.indexOf((x + w) + "_" + (y + h)), 1);
+								j = landTilesLeft.length;
+							}
+						}
+					}else if(f + 1 >= factors.length) {
+						factors.push();
+					}
+				}
+				if(spaceFound) {
+					//Move on to the next region
+					break;
+				}
+			}
+		}
+	}
 }
 
 function fixIslands(terrain, landTiles) {

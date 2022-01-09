@@ -1,0 +1,22 @@
+{
+  "name": "hex-engine",
+  "version": "1.0.0",
+  "description": "",
+  "main": "HexRisk.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/NavigSB/hex-engine.git"
+  },
+  "author": "Gavin Bullock",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/NavigSB/hex-engine/issues"
+  },
+  "homepage": "https://github.com/NavigSB/hex-engine#readme",
+  "dependencies": {
+    "express": "^4.17.1"
+  }
+}
