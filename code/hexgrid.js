@@ -1,4 +1,18 @@
 
+function setup() {
+	noLoop();
+}
+
+function loadAssets() {
+	for(let i = 0; i < HexGrid.config.images.length; i++) {
+		HexGrid.images[HexGrid.config.images[i]] = loadImage(HexGrid.config.images[i]);
+	}
+}
+
+function setupCanvas() {
+	createCanvas(HexGrid.config.screenWidth, HexGrid.config.screenHeight);
+}
+
 var HexGrid = (function() {
 
 	"use strict";
@@ -7,8 +21,6 @@ var HexGrid = (function() {
 
 	const X_START = 0;
 	const Y_START = 0;
-
-	const SVG_NS = "http://www.w3.org/2000/svg";
 
 	API.STACKING = {
 		PYRAMID: 0,
@@ -19,12 +31,7 @@ var HexGrid = (function() {
 	let overlapPerc = 20;
 	let unitSize;
 
-	let w = 10;
-	let h = 10;
-
-	let defElements = [];
-
-	let currentPath = "";
+	let w, h;
 
 	let tooltip;
 
@@ -37,9 +44,26 @@ var HexGrid = (function() {
 	let arrows = [];
 	let unitColors = [];
 
-	API.create = function() {
+	let currentPath = {};
+
+	API.create = function(config) {
+		config = config || {
+			classes: {},
+			screenWidth: 800,
+			screenHeight: 600,
+			w: 10,
+			h: 10,
+			images: [],	
+		};
+		API.config = config;
+		API.images = {};
+		w = config.w;
+		h = config.h;
+		API.setClasses(config.classes);
 		buildScreen();
-		window.addEventListener("resize", () => {updateScreen(); updateScreen();});
+		window.addEventListener("resize", updateScreen);
+		loadAssets();
+		setupCanvas();
 	}
 
 	API.setStackingMode = function(mode, maximumStackSize, overlapPercent) {
@@ -199,10 +223,6 @@ var HexGrid = (function() {
 		return newArrow;
 	}
 
-	API.addDef = function(defElement) {
-		defElements.push(defElement);
-	}
-
 	API.getHexes = function() {
 		return hexes;
 	}
@@ -262,10 +282,7 @@ var HexGrid = (function() {
 			this.z = cubeCoords[2];
 			this.units = [];
 			this.obstructions = [];
-			this.path = document.createElementNS(SVG_NS, "path");
-			this.path.id = this.x + "_" + this.y + "_" + this.z;
 			this.attributes = {};
-			this.path.addEventListener("mousemove", () => this.mouseoverCallback(this));
 		}
 
 		mouseoverCallback(thisHex) {
@@ -330,9 +347,11 @@ var HexGrid = (function() {
 		}
 
 		addBackgroundImage(src, noUpdate) {
-			this.backgroundImage = document.createElementNS(SVG_NS, "image");
-			this.backgroundImage.classList.add("clipped");
-			this.backgroundImage.setAttribute("href", src);
+			if(!Object.keys(API.images).includes(src)) {
+				console.error("Cannot find image src ' + " + src + " + ' in preloaded images!");
+				return;
+			}
+			this.backgroundImage = src;
 			if(!noUpdate) {
 				updateScreen();
 			}
@@ -347,11 +366,8 @@ var HexGrid = (function() {
 		}
 
 		display() {
-			if(this.path.classList.length === 0 && classJSON.hexClass) {
-				this.path.classList.add(classJSON.hexClass);
-			}
-			this.path.setAttribute("d", getHexagonPath(this.x, this.y, this.z, sideLength));
-			id("screen").appendChild(this.path);
+			this.path = getHexagonPath(this.x, this.y, this.z, sideLength);
+			displayPath(this.path);
 			this.displayBackgroundImage();
 			for(let i = 0; i < this.obstructions.length; i++) {
 				this.obstructions[i].display();
@@ -361,13 +377,13 @@ var HexGrid = (function() {
 
 		displayBackgroundImage() {
 			if(this.backgroundImage) {
-				let pathBoundingBox = this.path.getBBox();
-				this.backgroundImage.setAttribute("x", pathBoundingBox.x);
-				this.backgroundImage.setAttribute("y", pathBoundingBox.y);
-				this.backgroundImage.setAttribute("width", pathBoundingBox.width);
-				this.backgroundImage.setAttribute("height", pathBoundingBox.height);
-				id("screen").prepend(this.backgroundImage);
-				this.path = id("screen").getElementById(this.x + "_" + this.y + "_" + this.z);
+				let shape = createGraphics(sideLength * Math.sqrt(3), sideLength * Math.sqrt(3));
+				shape.beginShape();
+				for(let i = 0; i < this.path.vertices.length; i++) {
+					shape.vertex(this.path.vertices[i].x, this.path.vertices[i].y);
+				}
+				shape.endShape();
+				image(shape, 0, 0);
 			}
 		}
 
@@ -405,89 +421,24 @@ var HexGrid = (function() {
 		constructor(hex, imageSrc, attributesJSON) {
 			this.hex = hex;
 			this.attributes = attributesJSON || {};
-			this.img = document.createElementNS(SVG_NS, "image");
-			this.img.setAttribute("href", imageSrc);
-			if(imageSrc.includes("svg")) {
-				this.img.setAttribute("width", sideLength / 4);
-				this.img.setAttribute("height", sideLength / 4);
-			}
 			this.auxiliaries = [];
-			let thisUnit = this;
-			if(classJSON.unitClass) {
-				this.img.classList.add(classJSON.unitClass);
-			}
-			this.img.addEventListener("mouseenter", function(){
-				thisUnit.hex.shownUnit = thisUnit;
-				if(Object.keys(thisUnit.attributes).length > 0 && thisUnit.attributes.showAttributes !== false) {
-					id("hex-tooltip").innerHTML = thisUnit.getAttrStr();
-					id("hex-tooltip").classList.remove("hidden");
-				}else{
-					id("hex-tooltip").classList.add("hidden");
-				}
-				updateScreen();
-			});
+			this.imageSrc = imageSrc;
+			// this.img.addEventListener("mouseenter", function(){
+			// 	thisUnit.hex.shownUnit = thisUnit;
+			// 	if(Object.keys(thisUnit.attributes).length > 0 && thisUnit.attributes.showAttributes !== false) {
+			// 		id("hex-tooltip").innerHTML = thisUnit.getAttrStr();
+			// 		id("hex-tooltip").classList.remove("hidden");
+			// 	}else{
+			// 		id("hex-tooltip").classList.add("hidden");
+			// 	}
+			// 	updateScreen();
+			// });
 			this.display();
 		}
 
-		getAttrStr() {
-			let attrStr = "";
-			for(let attribute in this.attributes) {
-				if(attribute === "showUnit") {
-					attrStr += this.getTooltipImageHTML();
-				}else{
-					attrStr += "<em>" + attribute + "</em>: " + this.attributes[attribute];
-				}
-				attrStr += "<br>";
-			}
-			return attrStr.substring(0, attrStr.length - 4);
-		}
-
-		getTooltipImageHTML() {
-			let unitHolder = document.createElementNS(SVG_NS, "svg");
-			let unitImg = this.img;
-			unitImg.removeAttribute("x");
-			unitImg.removeAttribute("y");
-			unitImg.setAttribute("width", sideLength);
-			unitHolder.setAttribute("width", sideLength);
-			unitImg.removeAttribute("height", sideLength);
-			unitHolder.setAttribute("height", sideLength);
-			unitHolder.appendChild(unitImg);
-			return unitHolder.outerHTML;
-		}
-
-		//All values are in floating point percentages!
-		addAuxiliary(element, x, y, width, height) {
-			this.auxiliaries.push({
-				element: element,
-				x: x,
-				y: y,
-				width: width,
-				height: height
-			});
-			updateScreen();
-		}
-
 		display(relX, relY) {
-			this.img.setAttribute("width", unitSize);
-			this.img.setAttribute("height", unitSize);
 			let pos = getHexCenterFromCoord(this.hex.x, this.hex.y, this.hex.z);
-			relX = relX || 0;
-			relY = relY || 0;
-			this.img.setAttribute("x", pos[0] + relX);
-			this.img.setAttribute("y", pos[1] + relY);
-			id("screen").appendChild(this.img);
-			let bBox = this.img.getBBox();
-			for(let i = 0; i < this.auxiliaries.length; i++) {
-				this.auxiliaries[i].element.setAttribute("x", bBox.x + this.auxiliaries[i].x * bBox.width);
-				this.auxiliaries[i].element.setAttribute("y", bBox.y + this.auxiliaries[i].y * bBox.height);
-				if(this.auxiliaries[i].element.tagName === "text") {
-					this.auxiliaries[i].element.setAttribute("textLength", this.auxiliaries[i].width * bBox.width);
-				}else{
-					this.auxiliaries[i].element.setAttribute("width", this.auxiliaries[i].width * bBox.width);
-					this.auxiliaries[i].element.setAttribute("height", this.auxiliaries[i].height * bBox.height);
-				}
-				id("screen").appendChild(this.auxiliaries[i].element);
-			}
+			image(API.images[this.imageSrc], pos[0] + relX, pos[0] + relY, unitSize, unitSize);
 		}
 
 	}
@@ -496,59 +447,14 @@ var HexGrid = (function() {
 
 		constructor(hex, imageSrc, attributesJSON) {
 			this.hex = hex;
-			this.img = document.createElementNS(SVG_NS, "image");
-			this.img.setAttribute("href", imageSrc);
-			if(classJSON.obstructionClass) {
-				this.img.classList.add(classJSON.obstructionClass);
-			}
+			this.imageSrc = imageSrc;
 			this.display();
 		}
 
 		display(relX, relY) {
-			this.img.setAttribute("width", sideLength);
-			this.img.setAttribute("height", sideLength);
 			let pos = getHexCenterFromCoord(this.hex.x, this.hex.y, this.hex.z);
-			if(!relX) {
-				relX = 0;
-			}
-			if(!relY) {
-				relY = 0;
-			}
-			this.img.setAttribute("x", pos[0] - sideLength / 2);
-			this.img.setAttribute("y", pos[1] - sideLength / 2);
-			id("screen").appendChild(this.img);
+			image(API.images[this.imageSrc], pos[0] + (relX || 0), pos[0] + (relY || 0), sideLength, sideLength);
 		}
-	}
-
-	class Arrow {
-
-		constructor(startCubeX, startCubeY, startCubeZ, endCubeX, endCubeY, endCubeZ, classStr, headSize, baseWidth) {
-			this.startX = startCubeX;
-			this.startY = startCubeY;
-			this.startZ = startCubeZ;
-			this.endX = endCubeX;
-			this.endY = endCubeY;
-			this.endZ = endCubeZ;
-			this.classStr = classStr;
-			this.headSize = headSize;
-			this.baseWidth = baseWidth;
-			if(!this.classStr) {
-				this.classStr = "";
-			}
-			if(!this.headSize) {
-				this.headSize = 20;
-			}
-			if(!this.baseWidth) {
-				this.baseWidth = 5;
-			}
-		}
-
-		display() {
-			let startPos = getHexCenterFromCoord(this.startX, this.startY, this.startZ);
-			let endPos = getHexCenterFromCoord(this.endX, this.endY, this.endZ);
-			drawArrow(startPos[0], startPos[1], endPos[0], endPos[1], this.baseWidth, this.headSize, this.classStr);
-		}
-
 	}
 
 	API.Hex = Hex;
@@ -562,72 +468,23 @@ var HexGrid = (function() {
 				hexes.push(new Hex(x, y));
 			}
 		}
-		if(tooltip) {
-			id("screen").parentElement.removeChild(tooltip);
-		}
-		tooltip = document.createElement("div");
-		tooltip.id = "hex-tooltip";
-		tooltip.classList.add("hidden");
-		id("screen").parentElement.addEventListener("mousemove", setTooltipToMouse);
-		id("screen").parentElement.appendChild(tooltip);
-		addHexClipPath();
-		updateScreen();
-		updateScreen();
 	}
 
 	function updateScreen() {
 		if(hexes.length > 0) {
-			let width = id("screen").clientWidth;
-			if(!width) {
-				width = window.innerWidth;
-			}
 			sideLength = (2 * width) / (3 * w + 1);
 			let hexHeight = sideLength * Math.sqrt(3);
 			let totalHeight = hexHeight * h + hexHeight;
 			unitSize = (3 * sideLength / 2) / (maxStackSize);
-			id("screen").setAttribute("height", totalHeight);
-			id("screen").innerHTML = "";
+			resizeCanvas(width, totalHeight);
 
-			drawDefs();
+			background(255);
 			for(let i = 0; i < hexes.length; i++) {
 				hexes[i].display();
 			}
 			for(let i = 0; i < arrows.length; i++) {
 				arrows[i].display();
 			}
-		}
-	}
-
-	function drawDefs() {
-		let defs = document.createElement("defs");
-		for(let i = 0; i < defElements.length; i++) {
-			defs.appendChild(defElements[i]);
-		}
-		id("screen").appendChild(defs);
-	}
-
-	function addHexClipPath() {
-		let clipPath = document.createElementNS(SVG_NS, "clipPath");
-		clipPath.setAttribute("id", "hex-clip");
-		clipPath.setAttribute("clipPathUnits", "objectBoundingBox");
-		//Bounding box hex coords
-		openPath(0, 0);
-		moveTo(0.25, 0);
-		lineTo(0.75, 0);
-		lineTo(1, 0.5);
-		lineTo(0.75, 1);
-		lineTo(0.25, 1);
-		lineTo(0, 0.5);
-		let hexPath = closePath();
-		clipPath.appendChild(hexPath);
-		defElements.push(clipPath);
-	}
-
-	function setTooltipToMouse(event) {
-		id("hex-tooltip").style.left = event.pageX + "px";
-		id("hex-tooltip").style.top = event.pageY + "px";
-		if(event.path[0] === id("screen") || event.path[0] === id("screen").parentElement) {
-			id("hex-tooltip").classList.add("hidden");
 		}
 	}
 
@@ -701,38 +558,38 @@ var HexGrid = (function() {
 	}
 
 	function colorUnit(unit, hexColorStr) {
-		const COLOR_MODIFIER = 1.5;
+		// const COLOR_MODIFIER = 1.5;
 
-		if(!unitColors.includes("color" + hexColorStr)) {
-			if(hexColorStr.includes("#")) {
-				hexColorStr = hexColorStr.substring(1);
-			}
-			let hexArr = hexColorStr.split("");
+		// if(!unitColors.includes("color" + hexColorStr)) {
+		// 	if(hexColorStr.includes("#")) {
+		// 		hexColorStr = hexColorStr.substring(1);
+		// 	}
+		// 	let hexArr = hexColorStr.split("");
 
-			//pluses turn the hex string to decimal
-			let r = +("0x" + hexArr[0] + hexArr[1]) * COLOR_MODIFIER;
-			let g = +("0x" + hexArr[2] + hexArr[3]) * COLOR_MODIFIER;
-			let b = +("0x" + hexArr[4] + hexArr[5]) * COLOR_MODIFIER;
+		// 	//pluses turn the hex string to decimal
+		// 	let r = +("0x" + hexArr[0] + hexArr[1]) * COLOR_MODIFIER;
+		// 	let g = +("0x" + hexArr[2] + hexArr[3]) * COLOR_MODIFIER;
+		// 	let b = +("0x" + hexArr[4] + hexArr[5]) * COLOR_MODIFIER;
 
-			let filter = document.createElementNS(SVG_NS, "filter");
-			filter.id = "color" + hexColorStr;
-			filter.setAttribute("x", "0%");
-			filter.setAttribute("y", "0%");
-			filter.setAttribute("width", "100%");
-			filter.setAttribute("height", "100%");
-			let matrix = document.createElementNS(SVG_NS, "feColorMatrix");
-			matrix.setAttribute("type", "matrix");
-			let row1 = (r/255) + " 0 0 0 0";
-			let row2 = "0 " + (g/255) + " 0 0 0";
-			let row3 = "0 0 " + (b/255) + " 0 0";
-			let row4 = "0 0 0 1 0";
-			matrix.setAttribute("values", row1 + "\n" + row2 + "\n" + row3 + "\n" + row4);
-			filter.appendChild(matrix);
-			API.addDef(filter);
-			unitColors.push("color" + hexColorStr);
-		}
+		// 	let filter = document.createElementNS(SVG_NS, "filter");
+		// 	filter.id = "color" + hexColorStr;
+		// 	filter.setAttribute("x", "0%");
+		// 	filter.setAttribute("y", "0%");
+		// 	filter.setAttribute("width", "100%");
+		// 	filter.setAttribute("height", "100%");
+		// 	let matrix = document.createElementNS(SVG_NS, "feColorMatrix");
+		// 	matrix.setAttribute("type", "matrix");
+		// 	let row1 = (r/255) + " 0 0 0 0";
+		// 	let row2 = "0 " + (g/255) + " 0 0 0";
+		// 	let row3 = "0 0 " + (b/255) + " 0 0";
+		// 	let row4 = "0 0 0 1 0";
+		// 	matrix.setAttribute("values", row1 + "\n" + row2 + "\n" + row3 + "\n" + row4);
+		// 	filter.appendChild(matrix);
+		// 	API.addDef(filter);
+		// 	unitColors.push("color" + hexColorStr);
+		// }
 
-		unit.img.style.filter = "url(#color" + hexColorStr + ")";
+		// unit.img.style.filter = "url(#color" + hexColorStr + ")";
 	}
 
 	function unitMove(unit, hex) {
@@ -844,9 +701,27 @@ var HexGrid = (function() {
 		return Math.sqrt(totalSquare);
 	}
 
+	function displayPath(path) {
+		if(path.fillColor) {
+			fill(path.fillColor);
+		}
+		if(path.strokeColor) {
+			stroke(path.strokeColor);
+		}
+		beginShape();
+		for(let i = 0; i < path.vertices.length; i++) {
+			vertex(path.vertices[i].x, path.vertices[i].y);
+		}
+		if(path.close) {
+			endShape(CLOSE);
+		}else{
+			endShape();
+		}
+	}
+
 	function getHexagonPath(cubeX, cubeY, cubeZ, sideLen) {
 		let center = getHexCenterFromCoord(cubeX, cubeY, cubeZ);
-		return createHexagon(center[0], center[1], sideLen).getAttribute("d");
+		return createHexagon(center[0], center[1], sideLen);
 	}
 
 	function createHexagon(x, y, sideLen) {
@@ -905,49 +780,44 @@ var HexGrid = (function() {
 		id("screen").appendChild(head);
 	}
 
-	function openPath(startX, startY, relative) {
-		currentPath = "";
+	function openPath(startX, startY, relative, fillColor, strokeColor) {
+		currentPath = {
+			vertices: [],
+			currPos: createVector(0, 0),
+			fillColor,
+			strokeColor,
+		};
 		moveTo(startX, startY, relative);
 	}
 
 	function moveTo(x, y, relative) {
-		addToPath("M", relative, [x, y]);
+		addToPath("M", relative, createVector(x, y));
 	}
 
 	function lineTo(x, y, relative) {
-		addToPath("L", relative, [x, y]);
+		addToPath("L", relative, createVector(x, y));
 	}
 
-	function closePath() {
-		addToPath("Z", false, []);
-		return endPath();
-	}
-
-	function endPath() {
-		let newPath = document.createElementNS(SVG_NS, "path");
-		newPath.setAttribute("d", currentPath);
-		return newPath;
-	}
-
-	function createSVGCircle(x, y, r) {
-		let circle = document.createElementNS(SVG_NS, "circle");
-		circle.setAttribute("cx", x);
-		circle.setAttribute("cy", y);
-		circle.setAttribute("r", r);
-		id("screen").appendChild(circle);
+	function closePath(noClose) {
+		delete currentPath.currPos;
+		currentPath.close = !noClose;
+		return currentPath;
 	}
 
 	function addToPath(action, relative, params) {
-		if (relative) {
-			action = action.toLowerCase();
-		} else {
-			action = action.toUpperCase();
+		//After this if, params always equals the coordinates to go to
+		if(relative && params) {
+			params.x += currentPath.currPos.x;
+			params.y += currentPath.currPos.y;
 		}
-
-		currentPath += action;
-		for (let i = 0; i < params.length; i++) {
-			currentPath += params[i] + " ";
+		if(action == "L") {
+			if(currentPath.vertices.length == 0) {
+				currentPath.vertices.push(createVector(currentPath.currPos.x, currentPath.currPos.y));
+			}
+			currentPath.vertices.push(createVector(params.x, params.y));
 		}
+		currentPath.currPos.x = params.x;
+		currentPath.currPos.y = params.y;
 	}
 
 	//Short for linear interpolation

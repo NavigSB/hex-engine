@@ -8,12 +8,27 @@
     }
 
     function initializeGame(w, h) {
-        HexGrid.setClasses({
-            hexClass: "hex",
-            hexHoverClass: "hex-hover"
+        let imageSrcs = [];
+        let srcLists = [
+            MemoirHelper.terrainPaths,
+            MemoirHelper.fixedObstaclePaths,
+            MemoirHelper.removableObstaclePaths,
+            MemoirHelper.troopPaths,
+        ];
+        srcLists.forEach((list) => {
+            Object.values(list).forEach((src) => {
+                if(src) {
+                    imageSrcs.push(src);
+                }
+            });
         });
-        HexGrid.changeGridDim(w, h);
-        HexGrid.create();
+        HexGrid.create({
+            w,
+            h,
+            screenWidth: 800,
+            screenHeight: 600,
+            images: imageSrcs,
+        });
         let terrainArr = generateTerrain(w, h);
         let troopsArr = generateTroopPos(w, h);
         return new HexMemoir(terrainArr, troopsArr, w, h);
@@ -66,7 +81,6 @@
                 let backgroundImgPath = MemoirHelper.getTerrainPath(hexTerrain) || MemoirHelper.getFixedObstaclePath(fixedObstacle);
                 if(backgroundImgPath) {
                     hex.addBackgroundImage(backgroundImgPath, true);
-                    hex.path.classList.add("terrained");
                 }
                 let obstacleImgPath = MemoirHelper.getRemovableObstaclePath(removableObstacle);
                 if(obstacleImgPath) {
