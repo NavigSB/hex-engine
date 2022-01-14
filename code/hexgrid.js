@@ -3,9 +3,20 @@ function setup() {
 	noLoop();
 }
 
-function loadAssets() {
+async function loadAssets() {
 	for(let i = 0; i < HexGrid.config.images.length; i++) {
-		HexGrid.images[HexGrid.config.images[i]] = loadImage(HexGrid.config.images[i]);
+		await (() => {
+			return new Promise((resolve) => {
+				loadImage(HexGrid.config.images[i], img => {
+					HexGrid.images[HexGrid.config.images[i]] = img;
+					resolve();
+				}, () => {
+					HexGrid.config.images.splice(i, 1);
+					i--;
+					resolve();
+				});
+			});
+		})();
 	}
 }
 
@@ -23,12 +34,10 @@ var HexGrid = (function() {
 	const Y_START = 0;
 
 	API.STACKING = {
-		PYRAMID: 0,
-		SINGLE_ROW: 1
+		PYRAMID: 0,        //Requires no parameters
+		SINGLE_ROW: 1,     //Requires 'overlap' parameter (percentage from 0-100, how much the units overlap in stack)
+		GRID: 2,           //Requires 'gridWidth' parameter (integer, how wide to make the grid of units)
 	};
-	let stackingMode = API.STACKING.PYRAMID;
-	let maxStackSize = 3;
-	let overlapPerc = 20;
 	let unitSize;
 
 	let w, h;
@@ -46,31 +55,38 @@ var HexGrid = (function() {
 
 	let currentPath = {};
 
-	API.create = function(config) {
-		config = config || {
-			classes: {},
-			screenWidth: 800,
-			screenHeight: 600,
-			w: 10,
-			h: 10,
-			images: [],	
-		};
+	API.create = async function(config = {
+		classes: {},
+		screenWidth: 800,
+		screenHeight: 600,
+		w: 10,
+		h: 10,
+		stacking: {
+			mode: API.STACKING.PYRAMID,
+			maxSize: 3,
+			parameters: {
+				overlap: 20
+			}
+		},
+		images: [],	
+	}) {
 		API.config = config;
 		API.images = {};
 		w = config.w;
 		h = config.h;
 		API.setClasses(config.classes);
 		buildScreen();
-		window.addEventListener("resize", updateScreen);
-		loadAssets();
+		await loadAssets();
 		setupCanvas();
+		window.addEventListener("resize", updateScreen);
+		updateScreen();
 	}
 
-	API.setStackingMode = function(mode, maximumStackSize, overlapPercent) {
-		stackingMode = mode;
-		maxStackSize = maximumStackSize || maxStackSize;
-		overlapPerc = overlapPercent || overlapPerc;
-	}
+	// API.setStackingMode = function(mode, maximumStackSize, overlapPercent) {
+	// 	stackingMode = mode;
+	// 	maxStackSize = maximumStackSize || maxStackSize;
+	// 	overlapPerc = overlapPercent || overlapPerc;
+	// }
 
 	API.getHexLine = function(hex1, hex2, getBothHexesOnBoundary = false) {
 		if(getBothHexesOnBoundary) {
@@ -351,7 +367,21 @@ var HexGrid = (function() {
 				console.error("Cannot find image src ' + " + src + " + ' in preloaded images!");
 				return;
 			}
-			this.backgroundImage = src;
+			let imgClass = Object.getPrototypeOf(API.images[src]);
+			this.backgroundImage = Object.assign(Object.create(imgClass), API.images[src]);
+
+			let imgSideLength = Math.min(this.backgroundImage.width, this.backgroundImage.height);
+			let hexPath = createHexagon(imgSideLength / 2, imgSideLength / 2, imgSideLength / 2);
+
+			let shape = createGraphics(imgSideLength, imgSideLength);
+			shape.beginShape();
+			for(let i = 0; i < this.path.vertices.length; i++) {
+				shape.vertex(hexPath.vertices[i].x, hexPath.vertices[i].y);
+			}
+			shape.endShape(CLOSE);
+			this.backgroundImage.mask(shape);
+			shape.remove();
+
 			if(!noUpdate) {
 				updateScreen();
 			}
@@ -372,44 +402,76 @@ var HexGrid = (function() {
 			for(let i = 0; i < this.obstructions.length; i++) {
 				this.obstructions[i].display();
 			}
-			this.displayUnits();
+			if(this.units.length > 0) {
+				this.displayUnits();
+			}
 		}
 
 		displayBackgroundImage() {
 			if(this.backgroundImage) {
-				let shape = createGraphics(sideLength * Math.sqrt(3), sideLength * Math.sqrt(3));
-				shape.beginShape();
-				for(let i = 0; i < this.path.vertices.length; i++) {
-					shape.vertex(this.path.vertices[i].x, this.path.vertices[i].y);
-				}
-				shape.endShape();
-				image(shape, 0, 0);
+				let centerCoords = getHexCenterFromCoord(this.x, this.y, this.z);
+				image(this.backgroundImage, centerCoords[0] - sideLength, centerCoords[1] - sideLength, sideLength*2, sideLength*2);
 			}
 		}
 
 		displayUnits() {
-			let overlapWidth = (overlapPerc / 100) * unitSize;
-			let startOverlapX = -(overlapWidth * (this.units.length - 1) + unitSize) / 2;
+			console.log("Starting!");
 			let startRowX = -(this.units.length * unitSize) / 2;
 			let middleY = -unitSize / 2;
-			let shownUnitIndex;
+			let parameters = API.config.stacking.parameters;
+
+			const GRID_SPACE = 0.25;
+			let overlapWidth, startOverlapX, shownUnitIndex;
+			let rowWidth, currY, leftovers;
+			switch(API.config.stacking.mode) {
+				case API.STACKING.PYRAMID:
+					overlapWidth = (parameters.overlap / 100) * unitSize;
+					startOverlapX = -(overlapWidth * (this.units.length - 1) + unitSize) / 2;
+					break;
+				case API.STACKING.SINGLE_ROW:
+					break;
+				case API.STACKING.GRID:
+					let gridRows = Math.ceil(this.units.length / parameters.gridWidth);
+					let gridHeight = gridRows * unitSize * (GRID_SPACE + 1);
+					rowWidth = parameters.gridWidth * unitSize * (GRID_SPACE + 1) - GRID_SPACE * unitSize;
+					rowWidth = unitSize * (parameters.gridWidth * GRID_SPACE + parameters.gridWidth - GRID_SPACE);
+					currY = (gridHeight / 2);
+					leftovers = this.units.length % parameters.gridWidth;
+					break;
+			}
+			
 			for(let i = 0; i < this.units.length; i++) {
 				let unitPos;
-				switch(stackingMode) {
+				switch(API.config.stacking.mode) {
 					case API.STACKING.PYRAMID:
-						unitPos = startOverlapX + i * overlapWidth, middleY;
+						unitPos = [startOverlapX + i * overlapWidth, middleY];
 						break;
 					case API.STACKING.SINGLE_ROW:
-						unitPos = startRowX + i * unitSize;
+						unitPos = [startRowX + i * unitSize, middleY];
+						break;
+					case API.STACKING.GRID:
+						let unitsLeft = this.units.length - i;
+						let gridWidth = parameters.gridWidth;
+						let startX;
+						if(i % gridWidth == 0) {
+							currY -= unitSize * (GRID_SPACE + 1);
+						}
+						if(unitsLeft <= leftovers) {
+							console.log(unitsLeft + " < " + leftovers);
+							startX = -(leftovers * unitSize * (GRID_SPACE + 1) - GRID_SPACE) / 2;
+						}else{
+							startX = -rowWidth / 2;
+						}
+						unitPos = [startX + (i % gridWidth) * unitSize * (GRID_SPACE + 1), currY];
 						break;
 				}
-				if(stackingMode !== API.STACKING.PYRAMID || this.shownUnit !== this.units[i]) {
-					this.units[i].display(unitPos, middleY);
+				if(API.config.stacking.mode !== API.STACKING.PYRAMID || this.shownUnit !== this.units[i]) {
+					this.units[i].display(unitPos[0], unitPos[1]);
 				}else{
 					shownUnitIndex = i;
 				}
 			}
-			if(stackingMode === API.STACKING.PYRAMID && shownUnitIndex !== undefined) {
+			if(API.config.stacking.mode === API.STACKING.PYRAMID && shownUnitIndex !== undefined) {
 				this.shownUnit.display(startOverlapX + shownUnitIndex * overlapWidth, middleY);
 			}
 		}
@@ -438,7 +500,7 @@ var HexGrid = (function() {
 
 		display(relX, relY) {
 			let pos = getHexCenterFromCoord(this.hex.x, this.hex.y, this.hex.z);
-			image(API.images[this.imageSrc], pos[0] + relX, pos[0] + relY, unitSize, unitSize);
+			image(API.images[this.imageSrc], pos[0] + relX, pos[1] + relY, unitSize, unitSize);
 		}
 
 	}
@@ -472,11 +534,11 @@ var HexGrid = (function() {
 
 	function updateScreen() {
 		if(hexes.length > 0) {
-			sideLength = (2 * width) / (3 * w + 1);
+			sideLength = (1.5 * window.innerWidth) / (3 * w + 1);
 			let hexHeight = sideLength * Math.sqrt(3);
 			let totalHeight = hexHeight * h + hexHeight;
-			unitSize = (3 * sideLength / 2) / (maxStackSize);
-			resizeCanvas(width, totalHeight);
+			unitSize = (3 * sideLength / 2) / (API.config.stacking.maxSize);
+			resizeCanvas(window.innerWidth, totalHeight);
 
 			background(255);
 			for(let i = 0; i < hexes.length; i++) {

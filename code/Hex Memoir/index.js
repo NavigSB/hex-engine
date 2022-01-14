@@ -2,12 +2,13 @@
 
     window.addEventListener("load", main);
 
-    function main() {
-        let memoirGame = initializeGame(13, 9);
+    async function main() {
+        let memoirGame = await initializeGame(13, 9);
+        console.log("Done Loading!");
         displayGame(memoirGame);
     }
 
-    function initializeGame(w, h) {
+    async function initializeGame(w, h) {
         let imageSrcs = [];
         let srcLists = [
             MemoirHelper.terrainPaths,
@@ -22,11 +23,18 @@
                 }
             });
         });
-        HexGrid.create({
+        await HexGrid.create({
             w,
             h,
             screenWidth: 800,
             screenHeight: 600,
+            stacking: {
+                mode: HexGrid.STACKING.GRID,
+                maxSize: 4,
+                parameters: {
+                    gridWidth: 2
+                },
+            },
             images: imageSrcs,
         });
         let terrainArr = generateTerrain(w, h);
