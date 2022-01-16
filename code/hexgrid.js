@@ -30,9 +30,6 @@ var HexGrid = (function() {
 
 	let API = {};
 
-	const X_START = 0;
-	const Y_START = 0;
-
 	API.STACKING = {
 		PYRAMID: 0,        //Requires no parameters
 		SINGLE_ROW: 1,     //Requires 'overlap' parameter (percentage from 0-100, how much the units overlap in stack)
@@ -46,6 +43,7 @@ var HexGrid = (function() {
 
 	let classJSON = {};
 
+	let xStart = 0;
 	let sideLength;
 	let hexes = [];
 	let units = [];
@@ -370,7 +368,7 @@ var HexGrid = (function() {
 			let imgClass = Object.getPrototypeOf(API.images[src]);
 			this.backgroundImage = Object.assign(Object.create(imgClass), API.images[src]);
 
-			let imgSideLength = Math.min(this.backgroundImage.width, this.backgroundImage.height);
+			let imgSideLength = min(this.backgroundImage.width, this.backgroundImage.height);
 			let hexPath = createHexagon(imgSideLength / 2, imgSideLength / 2, imgSideLength / 2);
 
 			let shape = createGraphics(imgSideLength, imgSideLength);
@@ -415,7 +413,6 @@ var HexGrid = (function() {
 		}
 
 		displayUnits() {
-			console.log("Starting!");
 			let startRowX = -(this.units.length * unitSize) / 2;
 			let middleY = -unitSize / 2;
 			let parameters = API.config.stacking.parameters;
@@ -431,7 +428,7 @@ var HexGrid = (function() {
 				case API.STACKING.SINGLE_ROW:
 					break;
 				case API.STACKING.GRID:
-					let gridRows = Math.ceil(this.units.length / parameters.gridWidth);
+					let gridRows = ceil(this.units.length / parameters.gridWidth);
 					let gridHeight = gridRows * unitSize * (GRID_SPACE + 1);
 					rowWidth = parameters.gridWidth * unitSize * (GRID_SPACE + 1) - GRID_SPACE * unitSize;
 					rowWidth = unitSize * (parameters.gridWidth * GRID_SPACE + parameters.gridWidth - GRID_SPACE);
@@ -457,7 +454,6 @@ var HexGrid = (function() {
 							currY -= unitSize * (GRID_SPACE + 1);
 						}
 						if(unitsLeft <= leftovers) {
-							console.log(unitsLeft + " < " + leftovers);
 							startX = -(leftovers * unitSize * (GRID_SPACE + 1) - GRID_SPACE) / 2;
 						}else{
 							startX = -rowWidth / 2;
@@ -534,13 +530,18 @@ var HexGrid = (function() {
 
 	function updateScreen() {
 		if(hexes.length > 0) {
-			sideLength = (1.5 * window.innerWidth) / (3 * w + 1);
-			let hexHeight = sideLength * Math.sqrt(3);
+			sideLength = (1.5 * document.body.clientWidth) / (3 * w + 1);
+			let hexHeight = sideLength * sqrt(3);
+			let totalWidth = sideLength * (3 * floor(w / 2) + 2 * (w % 2));
 			let totalHeight = hexHeight * h + hexHeight;
+			xStart = (document.body.clientWidth - totalWidth) / 2;
 			unitSize = (3 * sideLength / 2) / (API.config.stacking.maxSize);
-			resizeCanvas(window.innerWidth, totalHeight);
+			resizeCanvas(document.body.clientWidth, totalHeight);
 
 			background(255);
+			if(API.config.defaultFill) {
+				fill(API.config.defaultFill);
+			}
 			for(let i = 0; i < hexes.length; i++) {
 				hexes[i].display();
 			}
@@ -701,7 +702,7 @@ var HexGrid = (function() {
 	function hexDistFromCoords(x1, y1, z1, x2, y2, z2) {
 		//Uses Manhattan distance
 		//Since adjacent hexes are up one and to the side one, you have to divide by two for a distance of one for adjacent hexes.
-		return (Math.abs(x1 - x2) + Math.abs(y1 - y2) + Math.abs(z1 - z2)) / 2;
+		return (abs(x1 - x2) + abs(y1 - y2) + abs(z1 - z2)) / 2;
 	}
 
 	function getHexFromCoords(cubeX, cubeY, cubeZ) {
@@ -715,11 +716,11 @@ var HexGrid = (function() {
 	}
 
 	function getHexCenterFromCoord(x, y, z) {
-		let initX = X_START + sideLength;
-		let initY = Y_START + sideLength;
+		let initX = xStart + sideLength;
+		let initY = sideLength;
 
 		let diagonalXLength = sideLength / 2;
-		let hexHeight = sideLength * Math.sqrt(3);
+		let hexHeight = sideLength * sqrt(3);
 
 		let isXOdd = x & 1;
 		let tileY = z + (x - isXOdd) / 2;
@@ -760,7 +761,7 @@ var HexGrid = (function() {
 		for(let i = 0; i < arr1.length; i++) {
 			totalSquare += square(arr1[i] - arr2[i]);
 		}
-		return Math.sqrt(totalSquare);
+		return sqrt(totalSquare);
 	}
 
 	function displayPath(path) {
@@ -788,12 +789,12 @@ var HexGrid = (function() {
 
 	function createHexagon(x, y, sideLen) {
 		openPath(x, y);
-		moveTo(-sideLen / 2, -sideLen * Math.sqrt(3) / 2, true);
+		moveTo(-sideLen / 2, -sideLen * sqrt(3) / 2, true);
 		lineTo(sideLen, 0, true);
-		lineTo(sideLen / 2, sideLen * Math.sqrt(3) / 2, true);
-		lineTo(-sideLen / 2, sideLen * Math.sqrt(3) / 2, true);
+		lineTo(sideLen / 2, sideLen * sqrt(3) / 2, true);
+		lineTo(-sideLen / 2, sideLen * sqrt(3) / 2, true);
 		lineTo(-sideLen, 0, true);
-		lineTo(-sideLen / 2, -sideLen * Math.sqrt(3) / 2, true);
+		lineTo(-sideLen / 2, -sideLen * sqrt(3) / 2, true);
 		return closePath();
 	}
 
@@ -814,7 +815,7 @@ var HexGrid = (function() {
 	function drawArrow(startX, startY, endX, endY, baseWidth, headSize, classStr) {
 		let xDist = endX - startX;
 		let yDist = endY - startY;
-		let totalDist = Math.sqrt(xDist * xDist + yDist * yDist);
+		let totalDist = sqrt(xDist * xDist + yDist * yDist);
 		let headStartX = endX - ((xDist * headSize) / totalDist);
 		let headStartY = endY - ((yDist * headSize) / totalDist);
 		let xDisplacement = function(size) {return (yDist * size) / (totalDist)};
@@ -829,8 +830,8 @@ var HexGrid = (function() {
 		let base = endPath();
 
 		openPath(endX, endY);
-		lineTo(headStartX - xDisplacement(headSize/Math.sqrt(3)), headStartY + yDisplacement(headSize/Math.sqrt(3)));
-		lineTo(headStartX + xDisplacement(headSize/Math.sqrt(3)), headStartY - yDisplacement(headSize/Math.sqrt(3)));
+		lineTo(headStartX - xDisplacement(headSize/sqrt(3)), headStartY + yDisplacement(headSize/sqrt(3)));
+		lineTo(headStartX + xDisplacement(headSize/sqrt(3)), headStartY - yDisplacement(headSize/sqrt(3)));
 		let head = closePath();
 
 		if(!classStr) {

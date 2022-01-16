@@ -35,6 +35,7 @@
                     gridWidth: 2
                 },
             },
+            defaultFill: "#7CB68E",
             images: imageSrcs,
         });
         let terrainArr = generateTerrain(w, h);
